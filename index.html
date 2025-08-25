@@ -16,7 +16,13 @@
   --muted:#cfd6e6;
   --blue:#4b69ff; --purple:#8847ff; --pink:#d32ce6; --red:#eb4b4b; --gold:#f7d674;
   --caseW:420px; --caseH:190px;
-  --lensScale:1.18;
+  --lensScale:1.22;
+
+  /* wheel sizing (desktop defaults) */
+  --tileW:279px; --tileH:186px; --gap:10px; --vpH:calc(var(--tileH) + 20px);
+
+  /* quick modal bottom bar height */
+  --qBarH:58px;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -39,7 +45,12 @@ body{margin:0;color:#fff;background:#0d0f16;font:15px/1.35 "nintendo_NTLG-DB_001
 .hud.shiftDown{top:84px}
 .hud h1{margin:0;font-weight:800;font-size:26px;letter-spacing:.2px}
 .hud .sub{margin-top:4px;color:var(--muted);font-weight:600}
-.hud .note{margin-top:4px;color:#cfe1ff;font-size:12px;opacity:.9}
+.hud .note{margin-top:4px;color:#cfe1ff;font-size:12px;opacity:.95;display:inline-flex;align-items:center;gap:8px;justify-content:center}
+.hud .note::before{
+  content:"i"; display:inline-grid; place-items:center; width:16px; height:16px;
+  border-radius:50%; background:#fff; color:#000; font-weight:900; font-size:12px;
+  text-shadow:none
+}
 
 /* top controls */
 .topCtrls{position:absolute;right:16px;top:16px;z-index:12;display:flex;gap:8px}
@@ -48,9 +59,10 @@ body{margin:0;color:#fff;background:#0d0f16;font:15px/1.35 "nintendo_NTLG-DB_001
 select{appearance:none;background:#fff;border:none;color:#000;font-weight:800;cursor:pointer;border-radius:6px;padding:4px 8px}
 
 /* inventory button */
-.topLeft{position:absolute;left:16px;top:16px;z-index:12;display:flex;gap:8px}
-.ctrlBtn{background:rgba(0,0,0,.48);border:1px solid rgba(255,255,255,.2);padding:8px 12px;border-radius:8px;font-weight:800;cursor:pointer;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}
-.invMini{margin-top:4px;min-width:180px}
+.topLeft{position:absolute;left:16px;top:16px;z-index:12;display:flex;gap:8px;max-width:48vw}
+.ctrlBtn{background:rgba(0,0,0,.48);border:1px solid rgba(255,255,255,.2);padding:8px 12px;border-radius:8px;font-weight:800;cursor:pointer;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6);display:inline-block}
+.invMini{margin-top:4px;min-width:140px;width:clamp(140px,36vw,220px);max-width:220px}
+@media(max-width:480px){ .invMini{width:clamp(130px,32vw,180px);max-width:180px} }
 .invBar{height:6px;border-radius:4px;overflow:hidden;display:flex;gap:2px;background:rgba(255,255,255,.08)}
 .invSeg{height:100%}
 .invMiniStats{display:flex;gap:6px;flex-wrap:wrap;font-size:10px;margin-top:2px;opacity:.95}
@@ -72,15 +84,14 @@ select{appearance:none;background:#fff;border:none;color:#000;font-weight:800;cu
 .band{position:absolute;left:10%;right:10%;top:16px;height:10px;background:rgba(0,0,0,.18);border-radius:4px}
 .lock{position:absolute;width:18px;height:24px;background:#2e2e2e;border-radius:3px;left:calc(50% - 9px);top:10px;box-shadow:0 2px 0 #111}
 .lid{position:absolute;left:0;right:0;height:54%;top:-12%;border-radius:10px 10px 6px 6px;transform-origin:50% 100%;
-     background:linear-gradient(180deg,#ffd057,#e7ae1d 60%,#b9850d 100%);border:1px solid rgba(0,0,0,.32);box-shadow:inset 0 0 50px rgba(0,0,0,.25);
-     transform:perspective(900px) rotateX(52deg)}
+     background:linear-gradient(180deg,#ffd057,#e7ae1d 60%,#b9850d 100%);border:1px solid rgba(0,0,0,.32);box-shadow:inset 0 0 50px rgba(0,0,0,.25);transform:perspective(900px) rotateX(52deg)}
 .openLid .lid{animation:lidOpen .8s cubic-bezier(.2,.8,.1,1) forwards}
 @keyframes lidOpen{from{transform:perspective(900px) rotateX(52deg)}to{transform:perspective(900px) rotateX(-110deg)}}
 .fall{animation:fall .34s cubic-bezier(.2,.7,.2,1)}
 @keyframes fall{from{transform:translate(-50%,-60%) scale(1.02)}to{transform:translate(-50%,-50%) scale(1)}}
 .blurred{filter:blur(7px) brightness(.86) saturate(.95);transform:translate(-50%,-50%) scale(1.06)}
 
-/* overview */
+/* overview panel + cards */
 #page-overview .caseWrap{top:40%}
 .bottomPanel{position:absolute;left:0;right:0;bottom:0;z-index:6;background:linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.55) 40%, rgba(0,0,0,.78) 100%);border-top:1px solid rgba(255,255,255,.10);padding:10px 0 14px}
 .panelHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;padding:0 16px}
@@ -94,25 +105,34 @@ select{appearance:none;background:#fff;border:none;color:#000;font-weight:800;cu
 .labelTrain{font-weight:900;color:#fff}
 .labelStation{color:#cfd6e6;margin-top:-1px}
 .labelLines{padding:0 2px}
-.actionBar70{width:70vw;margin:8px auto 0;display:grid;grid-template-columns:1fr 1fr;align-items:center}
+
+/* action bar + quick open */
+.actionBar70{width:70vw;margin:8px auto 0;display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px}
 .prompt{font-weight:800;opacity:.95;justify-self:start}
 .prompt b{font-weight:900}
 .openSlot{justify-self:end}
+.quickSlot{display:flex;align-items:center;gap:12px;pointer-events:auto}
+.qChk{display:flex;align-items:center;gap:6px;font-weight:800}
+.qChk input{accent-color:#2abf6a;transform:scale(1.05)}
+.qStepper{display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);padding:4px 8px;border-radius:8px}
+.qBtn{cursor:pointer;border:none;background:transparent;color:#fff;font-weight:900;font-size:18px;line-height:1;padding:0 4px}
+.qNum{width:48px;text-align:center;border:none;background:transparent;color:#fff;font-weight:900;font-size:14px}
 
-/* open/roll */
+/* roll */
 #page-open .caseWrap{top:68%}
 .rollWrap{position:absolute;left:0;right:0;top:52%;transform:translateY(-50%);display:flex;justify-content:center;z-index:7;opacity:0;pointer-events:none}
 .rollWrap.wheelIn{animation:wheelIn .25s cubic-bezier(.2,.8,.1,1) forwards}
 @keyframes wheelIn{from{opacity:0;transform:translateY(-45%) scaleY(.98)}to{opacity:1;transform:translateY(-50%) scaleY(1)}}
-.viewport{position:relative;width:min(980px,94vw);height:206px;border:1px solid rgba(255,255,255,.18);border-radius:0;background:rgba(0,0,0,.35);padding:10px;overflow:visible;z-index:7}
-.track{position:relative;height:186px;display:flex;gap:10px;will-change:transform}
-.tile{flex:0 0 279px;height:186px;border-radius:0;border:1px solid rgba(255,255,255,.18);background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.03));display:flex;align-items:flex-end;justify-content:flex-start;position:relative;padding:12px 12px 16px;font-weight:900}
+.viewport{position:relative;width:min(980px,94vw);height:var(--vpH);border:1px solid rgba(255,255,255,.18);border-radius:0;background:rgba(0,0,0,.35);padding:10px;overflow:visible;z-index:7}
+.track{position:relative;height:var(--tileH);display:flex;gap:var(--gap);will-change:transform}
+.tile{flex:0 0 var(--tileW);height:var(--tileH);border-radius:0;border:1px solid rgba(255,255,255,.18);background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.03));display:flex;align-items:flex-end;justify-content:flex-start;position:relative;padding:12px 12px 16px;font-weight:900}
 .tile .stripe{left:0;right:0;height:6px;background:var(--clr)}
 
-/* lens */
+/* lens (desktop preserved; mobile rules below)
+   Desktop lens size (unchanged): width/height: min(60vmin, 560px) */
 .lens{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(60vmin,560px);height:min(60vmin,560px);border-radius:50%;overflow:hidden;pointer-events:none;z-index:10;opacity:0}
 .lens.show{opacity:1;transition:opacity .12s ease}
-.lens .layer{position:absolute;inset:0;transform:scale(1.12)}
+.lens .layer{position:absolute;inset:0}
 .zoomBG{position:absolute;inset:0;background-image:var(--bg);background-size:cover;background-position:center;filter:saturate(.96) contrast(1.02) brightness(.94)}
 .zoomCrate{position:absolute;left:50%;top:68%;transform:translate(-50%,-50%)}
 .zcrate{position:relative;width:var(--caseW);height:var(--caseH);transform:perspective(900px) rotateX(8deg) rotateY(-10deg);filter:blur(7px) brightness(.86)}
@@ -122,12 +142,11 @@ select{appearance:none;background:#fff;border:none;color:#000;font-weight:800;cu
 .zlid{position:absolute;left:0;right:0;height:54%;top:-12%;border-radius:10px 10px 6px 6px;transform-origin:50% 100%;background:linear-gradient(180deg,#ffd057,#e7ae1d 60%,#b9850d 100%);border:1px solid rgba(0,0,0,.32);box-shadow:inset 0 0 50px rgba(0,0,0,.25);transform:perspective(900px) rotateX(52deg)}
 .zopen .zlid{animation:lidOpen .8s cubic-bezier(.2,.8,.1,1) forwards}
 .zoomView{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(var(--lensScale))}
-.cloneViewport{position:relative;width:min(980px,94vw);height:206px;overflow:hidden}
-#trackClone{position:relative;height:186px;display:flex;gap:10px;will-change:transform}
-@media (max-width:700px){ .lens{width:min(520px,100vw);height:min(520px,100vw)} }
+.cloneViewport{position:relative;width:min(980px,94vw);height:var(--vpH);overflow:hidden}
+#trackClone{position:relative;height:var(--tileH);display:flex;gap:var(--gap);will-change:transform}
 
-/* curtains for side fade */
-.curtains{position:absolute;left:0;right:0;top:52%;transform:translateY(-50%);height:206px;pointer-events:none;z-index:8;opacity:0}
+/* curtains side fade */
+.curtains{position:absolute;left:0;right:0;top:52%;transform:translateY(-50%);height:var(--vpH);pointer-events:none;z-index:8;opacity:0}
 .curtains.play{animation:curtainIn .2s ease forwards, curtainHold 4.2s linear .2s forwards}
 .curtains::before{
   content:"";position:absolute;inset:0;
@@ -138,6 +157,13 @@ select{appearance:none;background:#fff;border:none;color:#000;font-weight:800;cu
 }
 @keyframes curtainIn{from{opacity:0}to{opacity:1}}
 @keyframes curtainHold{0%{opacity:1}90%{opacity:1}100%{opacity:0}}
+
+/* narrow mobile: smaller tiles + lens capped to 90% of screen */
+@media (max-width:480px){
+  :root{ --tileW:220px; --tileH:146px; --gap:8px; --vpH:calc(var(--tileH) + 20px); }
+  .viewport{width:86vw}
+  .lens{width:90vw;height:90vw} /* max 90% of mobile screen */
+}
 
 /* inspect */
 #page-inspect{z-index:30}
@@ -152,7 +178,7 @@ select{appearance:none;background:#fff;border:none;color:#000;font-weight:800;cu
 .collLine{color:#cfd6e6;margin-top:2px}
 .thinSolid{height:4px;border-radius:2px;margin:8px auto 0 auto;width:220px;background:#cfe1ff}
 .insCenter{position:absolute;left:0;right:0;top:50%;transform:translateY(-42%);display:flex;justify-content:center}
-.bigText{font-size:64px;font-weight:900;letter-spacing:.2px;text-shadow:0 8px 30px rgba(0,0,0,.6)}
+.bigText{font-size:64px;font-weight:900;letter-spacing:.2px;text-shadow:0 8px 30px rgba(0,0,0,.6);max-width:90vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .navArrow{position:absolute;top:0;bottom:0;width:72px;display:grid;place-items:center;font-size:42px;font-weight:900;color:#e8f2ff99;cursor:pointer;user-select:none}
 .navArrow:hover{color:#fff}
 .navLeft{left:0}.navRight{right:0}
@@ -164,19 +190,21 @@ select{appearance:none;background:#fff;border:none;color:#000;font-weight:800;cu
 /* inspect bottom bar + info panel */
 .insBottom{position:absolute;left:0;right:0;bottom:10px;z-index:6;display:flex;justify-content:center}
 .insBottom .bar70{width:70vw;background:linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.55) 40%, rgba(0,0,0,.78) 100%);border-top:1px solid rgba(255,255,255,.10);padding:10px 16px 12px;display:flex;align-items:center;justify-content:space-between}
+#page-inspect #closeBtn{margin-left:auto}
+
+/* Info button + panel */
 .infoBtn{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);display:grid;place-items:center;font-weight:900}
 .infoBtn:hover{filter:brightness(1.1)}
-/* Floating panel: fixed, no curves, vertical lines, auto-size */
 .infoPanel{
-  position:fixed; left:8px; top:0; /* JS positions precisely */
+  position:fixed; left:-9999px; top:-9999px; visibility:hidden;
   background:rgba(0,0,0,.92); border:1px solid rgba(255,255,255,.18);
   border-radius:0; padding:12px 14px; z-index:99;
   opacity:0; transform:translateY(4px); pointer-events:none;
   max-width:calc(100vw - 16px);
   box-shadow:0 10px 30px rgba(0,0,0,.55);
-  transition:opacity .12s ease, transform .12s ease;
+  transition:opacity .14s ease, transform .14s ease, visibility 0s linear .14s;
 }
-.infoPanel.show{opacity:1; transform:translateY(0); pointer-events:auto}
+.infoPanel.show{visibility:visible; opacity:1; transform:translateY(0); pointer-events:auto}
 .infoLines{display:block; font-size:13.5px; line-height:1.35}
 .infoLine{white-space:normal; word-break:break-word; margin:3px 0}
 .infoLine b{color:#fff; font-weight:900}
@@ -190,9 +218,33 @@ select{appearance:none;background:#fff;border:none;color:#000;font-weight:800;cu
 .inventory.behind{z-index:5;pointer-events:none}
 @keyframes invIn{from{transform:translateX(-100%)}to{transform:translateX(0)}}
 @keyframes invOut{from{transform:translateX(0)}to{transform:translateX(-100%)}}
-.invHead{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.12);gap:8px}
-.invTitle{font-weight:900}
-.invBtns{display:flex;gap:8px}
+.invHead{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.12);gap:8px;flex-wrap:wrap}
+.invTitle{font-weight:900;position:relative;padding:2px 6px;border-radius:6px}
+.invTitle.hint:hover{background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+
+/* FLOATING CASE LIST */
+.invCasePanel{
+  position:fixed; left:0; top:0; z-index:50;
+  background:rgba(0,0,0,.86); border:1px solid rgba(255,255,255,.18);
+  padding:10px 16px 12px 12px; display:none; max-height:60vh; overflow-y:auto; overflow-x:hidden;
+  animation:fade .14s ease; scrollbar-gutter:stable both-edges;
+  min-width:260px; max-width:calc(100vw - 32px);
+}
+.invCasePanel.show{display:block}
+.invCasePanel .hdr{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.invCasePanel .hdr .lg{width:44px;height:44px;border:1px solid rgba(255,255,255,.18);display:grid;place-items:center;background:rgba(255,255,255,.04);overflow:hidden}
+.invCasePanel .hdr .lg img{max-width:100%;max-height:100%}
+.invCasePanel .hdr .nm{font-size:18px;font-weight:900}
+/* Ensure list text never sits under the scrollbar */
+.invCasePanel .list{font-size:13.5px;line-height:1.25;margin-top:2px;padding-right:16px}
+.invCasePanel .li{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:4px 2px}
+.invCasePanel .liL{display:flex;gap:6px;min-width:0;flex:1;padding-right:16px}
+.invCasePanel .tick{display:inline-block;width:14px;text-align:center;color:#fff;flex:0 0 14px}
+.invCasePanel .name{white-space:normal;word-break:break-word;overflow-wrap:anywhere;flex:1}
+.invCasePanel .cnt{color:#cfd6e6;opacity:.9;font-size:12px;min-width:36px;text-align:right;margin-left:12px;flex:0 0 auto}
+.invCasePanel .desc{margin-top:8px;color:#cfd6e6}
+
+/* body */
 .invBody{display:flex;flex-direction:column;flex:1;min-height:0}
 #invGrid{flex:1;min-height:0;overflow-y:auto;padding:10px 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
 @media(max-width:600px){#invGrid{grid-template-columns:1fr;gap:8px}}
@@ -206,16 +258,61 @@ select{appearance:none;background:#fff;border:none;color:#000;font-weight:800;cu
 .invSort:focus{outline:none}
 
 /* open-page bottom bar */
-.openBottom{position:absolute;left:15vw;right:15vw;bottom:10px;z-index:9;display:none;background:linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.55) 40%, rgba(0,0,0,.78) 100%);border-top:1px solid rgba(255,255,255,.10);padding:10px 16px 12px;display:grid;grid-template-columns:1fr 1fr;align-items:center}
+.openBottom{position:absolute;left:15vw;right:15vw;bottom:10px;z-index:9;display:none;background:linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.55) 40%, rgba(0,0,0,.78) 100%);border-top:1px solid rgba(255,255,255,.10);padding:10px 16px 12px;display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px}
 .openBottom.show{display:grid}
+.openBottom.extended{right:12vw}
 .openPrompt{font-weight:800;justify-self:start}
 .openPrompt b{font-weight:900}
 .openRing{justify-self:end}
 .openRing .ring{width:22px;height:22px;border:3px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin 1.1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+#skipBtn{justify-self:end}
 
-/* small utility for wear line under names in inventory on wear sort */
+/* wear line */
 .wearLine{color:#cfd6e6;font-size:11px;word-break:break-all;line-height:1.15;margin-top:2px}
+
+/* QUICK-OPEN MODAL */
+.quickModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);backdrop-filter:blur(2px);z-index:40}
+.quickModal.show{display:flex;animation:qfade .18s ease}
+.quickModal.hiding{animation:qfadeOut .18s ease forwards}
+@keyframes qfade{from{opacity:.6;transform:scale(.98)}to{opacity:1;transform:scale(1)}}
+@keyframes qfadeOut{from{opacity:1;transform:scale(1)}to{opacity:.6;transform:scale(.98)}}
+.qBox{position:relative;width:min(1000px,92vw);color:#fff;--qClr:#eb4b4b;
+  background:linear-gradient(180deg,#1b161a 10%,#141116 55%,#121015);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 30px 80px rgba(0,0,0,.6), inset 0 0 0 2px color-mix(in srgb, var(--qClr) 24%, transparent);
+}
+@media (min-width:900px){ .qBox{aspect-ratio:16/9;} }
+.qBox::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:linear-gradient(180deg, var(--qClr), color-mix(in srgb, var(--qClr) 40%, black));}
+.qInner{padding:18px 24px calc(var(--qBarH) + 18px) 24px;position:relative;min-height:140px}
+.qNew{color:var(--qClr);font-weight:900;letter-spacing:.5px;margin-top:6px;font-size:22px}
+.qBig{position:absolute;left:32px;right:32px;top:50%;transform:translateY(-50%);text-align:center;
+      font-weight:900;font-size:56px;letter-spacing:.2px;text-shadow:0 8px 30px rgba(0,0,0,.6);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.qMeta{position:absolute;left:26px;bottom:calc(var(--qBarH) + 10px);display:flex;align-items:center;gap:12px}
+.qLogoSmall{width:56px;height:56px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);display:grid;place-items:center;overflow:hidden}
+.qLogoSmall img{max-width:100%;max-height:100%}
+.qText .qItemName{font-size:30px;font-weight:900}
+.qText .qCollName{color:#cfd6e6;margin-top:2px}
+.qCountFloat{position:absolute;right:26px;bottom:calc(var(--qBarH) + 8px);color:#cfd6e6;font-size:12px;opacity:.9}
+.qBottomBar{
+  position:absolute;left:0;right:0;bottom:0;height:var(--qBarH);
+  border-top:1px solid rgba(255,255,255,.12);
+  padding:10px 18px 12px 18px;display:flex;align-items:center;justify-content:flex-end;
+  background:linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.22));
+}
+.qArrow{position:absolute;top:0;bottom:0;width:48px;display:grid;place-items:center;font-size:32px;font-weight:900;color:#ffffffaa;cursor:pointer;user-select:none}
+.qArrow:hover{color:#fff}
+.qPrev{left:8px}.qNext{right:8px}
+
+/* MOBILE quick-modal: taller + scaled text; desktop untouched */
+@media(max-width:600px){
+  .qBox{min-height:74vh}
+  .qInner{padding:22px 18px calc(var(--qBarH) + 26px) 18px}
+  .qMeta{left:18px;bottom:calc(var(--qBarH) + 16px)}
+  .qCountFloat{right:18px;bottom:calc(var(--qBarH) + 14px)}
+  .qBig{font-size:40px;left:24px;right:24px}
+}
 </style>
 </head>
 <body>
@@ -239,11 +336,16 @@ select{appearance:none;background:#fff;border:none;color:#000;font-weight:800;cu
     <div id="hudSub" class="sub">Unlock <b>Ueno–Tokyo Line Collection</b></div>
   </div>
   <div class="caseWrap" id="case-over" style="top:40%"><div class="crate" id="crate-over"><div class="body"></div><div class="band"></div><div class="lock"></div><div class="lid"></div></div></div>
+
   <div class="bottomPanel">
     <div class="panelHead"><div id="containsCap" class="cap">Contains one of the following</div><div id="inspectBtn" class="mini">INSPECT ITEMS</div></div>
     <div id="grid" class="itemsGrid"></div>
     <div class="actionBar70">
       <div id="promptTxt" class="prompt">Unlock <b>Ueno‑Tokyo Case</b></div>
+      <div class="quickSlot" id="quickSlot">
+        <label class="qChk"><input type="checkbox" id="quickChk"> <span id="quickLbl">Quick Opening</span></label>
+        <div class="qStepper"><button id="qMinus" class="qBtn">‹</button><input id="qNum" class="qNum" type="text" value="1" inputmode="numeric" pattern="[0-9]*"><button id="qPlus" class="qBtn">›</button></div>
+      </div>
       <div class="openSlot"><button id="openBtn" class="btn btnGreen">OPEN</button></div>
     </div>
   </div>
@@ -269,8 +371,10 @@ select{appearance:none;background:#fff;border:none;color:#000;font-weight:800;cu
     <div id="hudSub2" class="sub">Unlock <b>Ueno–Tokyo Line Collection</b></div>
     <div id="onceNote" class="note">This container can only be opened once</div>
   </div>
+
   <div class="caseWrap" id="case-open" style="top:68%"><div class="crate" id="crate-open"><div class="body"></div><div class="band"></div><div class="lock"></div><div class="lid" id="lid-open"></div></div></div>
   <div class="curtains" id="curtains"></div>
+
   <div class="rollWrap" id="rollWrap">
     <div class="viewport" id="viewport"><div class="track" id="track"></div></div>
     <div class="lens" id="lens">
@@ -281,7 +385,13 @@ select{appearance:none;background:#fff;border:none;color:#000;font-weight:800;cu
       </div>
     </div>
   </div>
-  <div class="openBottom" id="openBottom"><div id="openPrompt" class="openPrompt">Unlock <b>Ueno‑Tokyo Case</b></div><div class="openRing"><div class="ring"></div></div></div>
+
+  <!-- Open-page bottom bar -->
+  <div class="openBottom" id="openBottom">
+    <div id="openPrompt" class="openPrompt">Unlock <b>Ueno‑Tokyo Case</b></div>
+    <div class="openRing" id="openRing"><div class="ring"></div></div>
+    <button id="skipBtn" class="btn">CLOSE</button>
+  </div>
 </section>
 
 <!-- INSPECT -->
@@ -328,15 +438,39 @@ select{appearance:none;background:#fff;border:none;color:#000;font-weight:800;cu
 <!-- INVENTORY -->
 <aside id="inventory" class="inventory" aria-hidden="true">
   <div class="invHead">
-    <div style="display:flex;align-items:center;gap:8px">
+    <div style="display:flex;align-items:center;gap:8px;position:relative">
       <div id="invTitle" class="invTitle">Inventory</div>
       <select id="invSort" class="invSort"></select>
+      <div id="invCasePanel" class="invCasePanel" role="dialog" aria-hidden="true">
+        <div class="hdr"><div class="lg"><img id="invCaseLogo" alt=""></div><div class="nm" id="invCaseName">Ueno–Tokyo Line Collection</div></div>
+        <div class="list" id="invCaseList"></div>
+        <div class="desc" id="invCaseDesc">Through-running vibes. Local, Rapid, Special Rapid, Hitachi/Tokiwa, and Odoriko family—mapped to stations.</div>
+      </div>
     </div>
     <div class="invBtns"><button id="invClear" class="btn">Clear Inventory</button><button id="invClose" class="btn">Close</button></div>
   </div>
   <div class="invBody"><div id="invGrid"></div></div>
   <div id="invConfirm" class="invConfirm"><div class="row"><div id="confirmText" class="txt">Are you sure?</div><div><button id="confirmYes" class="btn btnRed">Yes</button><button id="confirmNo" class="btn">Cancel</button></div></div></div>
 </aside>
+
+<!-- QUICK-OPEN MODAL -->
+<div id="quickModal" class="quickModal" aria-hidden="true">
+  <div class="qBox" id="qBox">
+    <div class="qInner"><div id="qNew" class="qNew">NEW ITEM</div></div>
+    <div id="qBig" class="qBig">Local | Katsuta</div>
+    <div class="qMeta">
+      <div class="qLogoSmall"><img id="qLogoSmall" alt=""></div>
+      <div class="qText">
+        <div id="qItemName" class="qItemName">Local | Katsuta</div>
+        <div id="qCollName" class="qCollName">Ueno–Tokyo Line Collection</div>
+      </div>
+    </div>
+    <div id="qCountFloat" class="qCountFloat">1 / 1</div>
+    <div class="qBottomBar"><button id="qClose" class="btn qClose">CONTINUE</button></div>
+    <div id="qPrev" class="qArrow qPrev">‹</div>
+    <div id="qNext" class="qArrow qNext">›</div>
+  </div>
+</div>
 
 <script>
 /* ===== UTIL ===== */
@@ -356,7 +490,6 @@ const TYPES = {
   ja:{Local:'普通', Rapid:'快速', SpRapid:'特別快速', Hitachi:'ひたち', Tokiwa:'ときわ', Odoriko:'踊り子', Saphir:'サフィール踊り子'},
   zh:{Local:'普通', Rapid:'快速', SpRapid:'特别快速', Hitachi:'常陆', Tokiwa:'常磐', Odoriko:'踊子', Saphir:'蓝宝石踊子'}
 };
-/* Exterior names EXACTLY as your table */
 const EXT_NAMES={
   en:{FN:'Factory New (FN)', MW:'Minimal Wear (MW)', FT:'Field-Tested (FT)', WW:'Well-Worn (WW)', BS:'Battle-Scarred (BS)'},
   zh:{FN:'崭新出厂',         MW:'略有磨损',             FT:'久经沙场',            WW:'破损不堪',             BS:'战痕累累'},
@@ -364,54 +497,53 @@ const EXT_NAMES={
 };
 const UI = {
   en:{language:'Language', bg:'BG', unlock:'Unlock Container', sub:'Unlock <b>Ueno–Tokyo Case</b>', note:'This container can only be opened once', contains:'Contains one of the following', inspect:'INSPECT ITEMS', prompt:'Unlock <b>Ueno‑Tokyo Case</b>', open:'OPEN', close:'CLOSE', coll:'Ueno–Tokyo Line Collection', inventory:'Inventory', clearInv:'Clear Inventory', areYouSure:'Are you sure?', yes:'Yes', cancel:'Cancel', info:'Info', tt:'Train Type', tc:'Train Catalog', tpl:'Template', wear:'Wear Rating', ext:'Exterior',
-      sort:'Sort', sDef:'Default (Newest → Oldest)', sOld:'Oldest First', sAZ:'A–Z', sZA:'Z–A', sRUp:'Rarity ↑', sRDown:'Rarity ↓', sWUp:'Wear ↑ (FN→BS)', sWDown:'Wear ↓ (BS→FN)'},
+      sort:'Sort', sDef:'Default (Newest → Oldest)', sOld:'Oldest First', sAZ:'A–Z', sZA:'Z–A', sRUp:'Rarity ↑', sRDown:'Rarity ↓', sWUp:'Wear ↑ (FN→BS)', sWDown:'Wear ↓ (BS→FN)',
+      tabTitle:'Unlock Container — Ueno–Tokyo Line Collection', quick:'Quick Opening', newItem:'NEW ITEM', cont:'CONTINUE'},
   ja:{language:'言語', bg:'背景', unlock:'コンテナを開封', sub:'〈<b>上野東京ケース</b>〉を開封', note:'このコンテナは一度しか開封できません', contains:'次のいずれかが入っています', inspect:'アイテムを検査', prompt:'〈<b>上野東京ケース</b>〉を開封', open:'開封', close:'閉じる', coll:'上野東京ライン コレクション', inventory:'インベントリ', clearInv:'在庫をクリア', areYouSure:'よろしいですか？', yes:'はい', cancel:'キャンセル', info:'情報', tt:'運用形式', tc:'カタログ', tpl:'テンプレート', wear:'摩耗値', ext:'外装',
-      sort:'並び替え', sDef:'既定（新→旧）', sOld:'古い順', sAZ:'A–Z', sZA:'Z–A', sRUp:'レア度 ↑', sRDown:'レア度 ↓', sWUp:'摩耗 ↑（FN→BS）', sWDown:'摩耗 ↓（BS→FN）'},
+      sort:'並び替え', sDef:'既定（新→旧）', sOld:'古い順', sAZ:'A–Z', sZA:'Z–A', sRUp:'レア度 ↑', sRDown:'レア度 ↓', sWUp:'摩耗 ↑（FN→BS）', sWDown:'摩耗 ↓（BS→FN）',
+      tabTitle:'コンテナを開封 — 上野東京ライン コレクション', quick:'クイック開封', newItem:'新アイテム', cont:'続行'},
   zh:{language:'语言', bg:'背景', unlock:'解锁武器箱', sub:'解锁「<b>上野东京线</b>」武器箱', note:'此武器箱只能开启一次', contains:'可能包含以下之一', inspect:'检视物品', prompt:'解锁<b>上野东京箱</b>', open:'开启', close:'关闭', coll:'上野东京线 收藏品', inventory:'库存', clearInv:'清空库存', areYouSure:'确定吗？', yes:'确定', cancel:'取消', info:'信息', tt:'车型/线路', tc:'目录编号', tpl:'模板', wear:'磨损值', ext:'外观',
-      sort:'排序', sDef:'默认（新→旧）', sOld:'最旧优先', sAZ:'A–Z', sZA:'Z–A', sRUp:'稀有度 ↑', sRDown:'稀有度 ↓', sWUp:'磨损 ↑（FN→BS）', sWDown:'磨损 ↓（BS→FN）'}
+      sort:'排序', sDef:'默认（新→旧）', sOld:'最旧优先', sAZ:'A–Z', sZA:'Z–A', sRUp:'稀有度 ↑', sRDown:'稀有度 ↓', sWUp:'磨损 ↑（FN→BS）', sWDown:'磨损 ↓（BS→FN）',
+      tabTitle:'解锁武器箱 — 上野东京线 收藏品', quick:'快速开启', newItem:'新物品', cont:'继续'}
 };
-
 function tType(k){return TYPES[LANG][k];}
 function tLine(k){return LINES[LANG][k];}
 function tTypeEn(k){return TYPES['en'][k];}
 
-/* ===== Items (service type + station + rarity + tag) ===== */
+/* ===== Items ===== */
 function stripe(r){return r==='Mil-Spec'?'sBlue':r==='Restricted'?'sPurple':r==='Classified'?'sPink':r==='Covert'?'sRed':'sGold'}
 function colorFor(r){return r==='Mil-Spec'?'#4b69ff':r==='Restricted'?'#8847ff':r==='Classified'?'#d32ce6':r==='Covert'?'#eb4b4b':'#f7d674'}
 const TAG=(en,ja,zh)=>({en,ja,zh});
 function S(type,station,rarity,tag){return {type,station,rarity,stripe:stripe(rarity),tag}}
-
 const ITEMS=[
-  S('Hitachi','Sendai','Covert',      TAG("To the center of Miyagi!","宮城の中心へ！","坐着在来线，直冲宫城！")),
-  S('Hitachi','Iwaki','Restricted',    TAG("Endurance terminus of legends.","伝説の終点、持久の地。","常陆号标准结局")),
-  S('Hitachi','Haranomachi','Exceedingly Rare', TAG("Horse banners, sea wind cadence.","馬旗と潮風のリズム。","其实它并不是相马野马追...")),
+  S('Hitachi','Sendai','Covert',TAG("To the center of Miyagi!","宮城の中心へ！","坐着在来线，直冲宫城！")),
+  S('Hitachi','Iwaki','Restricted',TAG("Endurance terminus of legends.","伝説の終点、持久の地。","常陆号标准结局")),
+  S('Hitachi','Haranomachi','Exceedingly Rare',TAG("Horse banners, sea wind cadence.","馬旗と潮風のリズム。","其实它并不是相马野马追...")),
   S('Hitachi','Katsuta','Exceedingly Rare', TAG("Gold route to the wind.","海風へ続く黄金ルート。","最快的一集")),
-  S('Tokiwa','Katsuta','Covert',       TAG("Wind shrine gate — Nemophila calls.","風の鳥居—ネモフィラが呼ぶ。","哇，是家的味道")),
-  S('Tokiwa','Tsuchiura','Classified', TAG("Express sweep across the lake.","湖面を掠める特急の一掃。","常磐线里唯一的独苗")),
-  S('Tokiwa','Takahagi','Restricted',  TAG("Coastal cliffs, express poise.","海岸の断崖、特急の気品。","你是高萩的爱人吗？")),
+  S('Tokiwa','Katsuta','Covert',TAG("Wind shrine gate — Nemophila calls.","風の鳥居—ネモフィラが呼ぶ。","哇，是家的味道")),
+  S('Tokiwa','Tsuchiura','Classified',TAG("Express sweep across the lake.","湖面を掠める特急の一掃。","常磐线里唯一的独苗")),
+  S('Tokiwa','Takahagi','Restricted',TAG("Coastal cliffs, express poise.","海岸の断崖、特急の気品。","你是高萩的爱人吗？")),
   S('Tokiwa','Iwaki','Exceedingly Rare',TAG("Straight to Iwaki, no sweat.","一直到磐城，轻松拿下。","直达福岛不费劲")),
-  S('Odoriko','Tokyo','Restricted',    TAG("Blue-green coaches to Izu.","伊豆へ向かう青緑の客車。","开往伊豆的蓝绿车身")),
-  S('Saphir','Tokyo','Exceedingly Rare', TAG("Premium ride to the sea.","海へ続くプレミアムライド。","去海边的豪(qiang)华(qian)之旅")),
-  S('Rapid','Toride','Mil-Spec',       TAG("Border hop specialist.","県境越えの名手。","您已进入茨城")),
-  S('Rapid','Narita','Mil-Spec',       TAG("Airport orbit without the vanity.","空港と街を結ぶ地元ラピッド。","别把我和成田特慢搞混")),
+  S('Odoriko','Tokyo','Restricted',TAG("Blue-green coaches to Izu.","伊豆へ向かう青緑の客車。","开往伊豆的蓝绿车身")),
+  S('Saphir','Tokyo','Exceedingly Rare',TAG("Premium ride to the sea.","海へ続くプレミアムライド。","去海边的豪(qiang)华(qian)之旅")),
+  S('Rapid','Toride','Mil-Spec',TAG("Border hop specialist.","県境越えの名手。","您已进入茨城")),
+  S('Rapid','Narita','Mil-Spec',TAG("Airport orbit without the vanity.","空港と街を結ぶ地元ラピッド。","别把我和成田特慢搞混")),
   S('SpRapid','Tsuchiura','Restricted',TAG("Sprint along Kasumigaura.","霞ヶ浦沿いのスプリント。","它存在的意义到底是什么？")),
-  S('Local','Katsuta','Restricted',    TAG("Wind‑synced stop by the seaside.","海風に寄り添う停車場。","想你了，胜田")),
-  S('Local','Tsuchiura','Mil-Spec',    TAG("Kasumigaura breeze approved.","霞ヶ浦の風が似合う。","霞浦之风！")),
-  S('Local','Takahagi','Classified',   TAG("Local grit on the cliffline.","断崖に寄り添うローカルの粘り。","你就是传说中的耐坐王")),
-  S('Local','Mito','Classified',       TAG("Prefectural capital paperwork speedrun.","県都の事務処理RTA。","茨城首府的VIP票")),
-  S('Local','Takasaki','Mil-Spec',     TAG("Gateway to Gunma’s split rails.","群馬の分岐口へ。","群马分岔的门口。")),
-  S('Local','Utsunomiya','Mil-Spec',   TAG("Capital of gyoza and green signs.","餃子と緑看板の都。","我想吃宇都宫饺子")),
-  S('Local','Kagohara','Restricted',   TAG("Yard boss of the northbound flows.","北行の操車場ボス。","北向编组场老大")),
-  S('Local','Koganei','Restricted',    TAG("Quiet Tochigi resilience.","静かな栃木の底力。","安静而坚韧的枥木气质")),
-  S('Local','Koga','Restricted',       TAG("Brick bridges and calm timetables.","煉瓦橋と穏やかなダイヤ。","砖桥，和从容的时刻表")),
-  S('Local','Tokyo','Mil-Spec',        TAG("Boss concourses, clean transfers.","巨大コンコース、乗換え快適。","在换乘的迷宫里迷失吧")),
-  S('Local','Ueno','Mil-Spec',         TAG("Old soul, new backbone.","古き魂、新しい背骨。","老灵魂，新中枢")),
-  S('Local','Maebashi','Classified',   TAG("Gunma river winds, on schedule.","利根川の風、定刻通り。","利根川之风，准点进行")),
-  S('Local','Shin‑Maebashi','Classified', TAG("Transfer chessboard, tidy as hell.","乗換えの盤上、超整然。","换乘棋盘，整齐到爆"))
+  S('Local','Katsuta','Restricted',TAG("Wind‑synced stop by the seaside.","海風に寄り添う停車場。","想你了，胜田")),
+  S('Local','Tsuchiura','Mil-Spec',TAG("Kasumigaura breeze approved.","霞ヶ浦の風が似合う。","霞浦之风！")),
+  S('Local','Takahagi','Classified',TAG("Local grit on the cliffline.","断崖に寄り添うローカルの粘り。","你就是传说中的耐坐王")),
+  S('Local','Mito','Classified',TAG("Prefectural capital paperwork speedrun.","県都の事務処理RTA。","茨城首府的VIP票")),
+  S('Local','Takasaki','Mil-Spec',TAG("Gateway to Gunma’s split rails.","群馬の分岐口へ。","群马分岔的门口。")),
+  S('Local','Utsunomiya','Mil-Spec',TAG("Capital of gyoza and green signs.","餃子と緑看板の都。","我想吃宇都宫饺子")),
+  S('Local','Kagohara','Restricted',TAG("Yard boss of the northbound flows.","北行の操車場ボス。","北向编组场老大")),
+  S('Local','Koganei','Restricted',TAG("Quiet Tochigi resilience.","静かな栃木の底力。","安静而坚韧的枥木气质")),
+  S('Local','Koga','Restricted',TAG("Brick bridges and calm timetables.","煉瓦橋と穏やかなダイヤ。","砖桥，和从容的时刻表")),
+  S('Local','Tokyo','Mil-Spec',TAG("Boss concourses, clean transfers.","巨大コンコース、乗換え快適。","在换乘的迷宫里迷失吧")),
+  S('Local','Ueno','Mil-Spec',TAG("Old soul, new backbone.","古き魂、新しい背骨。","老灵魂，新中枢")),
+  S('Local','Maebashi','Classified',TAG("Gunma river winds, on schedule.","利根川の風、定刻通り。","利根川之风，准点进行")),
+  S('Local','Shin‑Maebashi','Classified',TAG("Transfer chessboard, tidy as hell.","乗換えの盤上、超整然。","换乘棋盘，整齐到爆"))
 ];
-/* station localization */
-const STN={
-  Takasaki:{ja:'高崎', zh:'高崎'}, Utsunomiya:{ja:'宇都宮', zh:'宇都宫'}, Tokyo:{ja:'東京', zh:'东京'}, Ueno:{ja:'上野', zh:'上野'},
+const STN={Takasaki:{ja:'高崎', zh:'高崎'}, Utsunomiya:{ja:'宇都宮', zh:'宇都宫'}, Tokyo:{ja:'東京', zh:'东京'}, Ueno:{ja:'上野', zh:'上野'},
   Narita:{ja:'成田', zh:'成田'}, Toride:{ja:'取手', zh:'取手'}, Tsuchiura:{ja:'土浦', zh:'土浦'}, Mito:{ja:'水戸', zh:'水户'},
   Kagohara:{ja:'籠原', zh:'笼原'}, Koganei:{ja:'小金井', zh:'小金井'}, Koga:{ja:'古河', zh:'古河'}, Maebashi:{ja:'前橋', zh:'前桥'},
   Takahagi:{ja:'高萩', zh:'高萩'}, Iwaki:{ja:'いわき', zh:'磐城'}, Haranomachi:{ja:'原ノ町', zh:'原之町'}, 'Shin‑Maebashi':{ja:'新前橋', zh:'新前桥'},
@@ -421,99 +553,71 @@ function stationName(stn){ if(LANG==='en')return stn; const m=STN[stn]; return m
 function displayKey(it){ return `${tType(it.type)} | ${stationName(it.station)}`; }
 function displayKeyEN(it){ return `${tTypeEn(it.type)} | ${it.station}`; }
 
-/* ===== Descriptions ===== */
-const DESC_MAP={
-  'E657':{en:"The E657 series is an AC/DC dual‑voltage EMU for Limited Express Hitachi/Tokiwa since 2012. Through‑runs via the Ueno–Tokyo Line to Tokyo/Shinagawa.", ja:"E657系は2012年より運用される交直流両用の特急形電車。「ひたち」「ときわ」として上野東京ライン経由で東京・品川へ直通。", zh:"E657系为交直流两用特急电动车组，自2012年起担当「常陆」「常磐」，经由上野‑东京线直通东京/品川。"},
-  'E531':{en:"The E531 series is an AC/DC commuter EMU on the Joban Line since 2005, through‑running to Tokyo/Shinagawa.", ja:"E531系は2005年登場の交直流通勤形。常磐線の快速・普通として上野東京ラインで東京・品川へ直通。", zh:"E531系为交直流通勤电动车组，常磐线快速/普通，经由上野‑东京线直通东京/品川。"},
-  'E233-3000':{en:"JR East’s E233‑3000 commuter family across Utsunomiya/Takasaki/Tokaido via the Ueno–Tokyo Line.", ja:"E233系3000番台は上野東京ラインを介し宇都宮・高崎・東海道各線で活躍する通勤形。", zh:"E233系3000番台在上野‑东京线贯通宇都宫/高崎/东海道各线。"},
-  'E231-1000':{en:"The E231‑1000 series covers dense commuter flows on Utsunomiya/Takasaki/Tokaido lines.", ja:"E231系1000番台は宇都宮・高崎・東海道の通勤輸送を担う主力。", zh:"E231系1000番台承担宇都宫/高崎/东海道通勤干线。"},
-  'E257':{en:"The E257 series handles Odoriko limited express duties to Izu.", ja:"E257系は伊豆方面の特急「踊り子」を担当。", zh:"E257系担当前往伊豆的特急「踊子」。"},
-  'E261':{en:"The E261 series runs premium Saphir Odoriko services.", ja:"E261系はプレミアム特急「サフィール踊り子」を運行。", zh:"E261系担当高端列车「蓝宝石踊子」。"}
-};
-const DESC_RAPID_NARITA = {
-  en:"Narita Line commuter runs linking Chiba hinterland with airport corridors — practical, fast, no frills.",
-  ja:"成田線の通勤運用。空港周辺と千葉内陸を結ぶ実用派ラピッド。",
-  zh:"成田线通勤列车，连接机场走廊与千叶腹地，务实迅捷。"
-};
+/* ===== Descriptions / pools / roll meta ===== */
+const DESC_MAP={'E657':{en:"The E657 series is an AC/DC dual‑voltage EMU for Limited Express Hitachi/Tokiwa since 2012. Through‑runs via the Ueno–Tokyo Line to Tokyo/Shinagawa.", ja:"E657系は2012年より運用される交直流両用の特急形電車。「ひたち」「ときわ」として上野東京ライン経由で東京・品川へ直通。", zh:"E657系为交直流两用特急电动车组，自2012年起担当「常陆」「常磐」，经由上野‑东京线直通东京/品川。"},
+'E531':{en:"The E531 series is an AC/DC commuter EMU on the Joban Line since 2005, through‑running to Tokyo/Shinagawa.", ja:"E531系は2005年登場の交直流通勤形。常磐線の快速・普通として上野東京ラインで東京・品川へ直通。", zh:"E531系为交直流通勤电动车组，常磐线快速/普通，经由上野‑东京线直通东京/品川。"},
+'E233-3000':{en:"JR East’s E233‑3000 commuter family across Utsunomiya/Takasaki/Tokaido via the Ueno–Tokyo Line.", ja:"E233系3000番台は上野東京ラインを介し宇都宮・高崎・東海道各線で活躍する通勤形。", zh:"E233系3000番台在上野‑东京线贯通宇都宫/高崎/东海道各线。"},
+'E231-1000':{en:"The E231‑1000 series covers dense commuter flows on Utsunomiya/Takasaki/Tokaido lines.", ja:"E231系1000番台は宇都宮・高崎・東海道の通勤輸送を担う主力。", zh:"E231系1000番台承担宇都宫/高崎/东海道通勤干线。"},
+'E257':{en:"The E257 series handles Odoriko limited express duties to Izu.", ja:"E257系は伊豆方面の特急「踊り子」を担当。", zh:"E257系担当前往伊豆的特急「踊子」。"},
+'E261':{en:"The E261 series runs premium Saphir Odoriko services.", ja:"E261系はプレミアム特急「サフィール踊り子」を運行。", zh:"E261系担当高端列车「蓝宝石踊子」。"}};
+const DESC_RAPID_NARITA={en:"Narita Line commuter runs linking Chiba hinterland with airport corridors — practical, fast, no frills.",ja:"成田線の通勤運用。空港周辺と千葉内陸を結ぶ実用派ラピッド。",zh:"成田线通勤列车，连接机场走廊与千叶腹地，务实迅捷。"};
 
-/* ===== Template pools & catalogs ===== */
-function keyTS(type,station){return `${type}|${station}`;}
-const TEMPLATES = {
-  [keyTS('Hitachi','Sendai')]: ['3M','13M','21M'],
-  [keyTS('Hitachi','Iwaki')]:  ['1M','5M','7M','9M','11M','15M','17M','19M','23M','25M','27M','29M'],
-  [keyTS('Hitachi','Haranomachi')]: ['13M'],
-  [keyTS('Hitachi','Katsuta')]: Array.from({length:15},(_,i)=>`${i*2+1}M`),
-  [keyTS('Tokiwa','Takahagi')]: ['51M','73M','77M','81M'],
-  [keyTS('Tokiwa','Katsuta')]: ['53M','55M','57M','59M','61M','63M','65M','67M','69M','71M','75M','79M','85M'],
-  [keyTS('Tokiwa','Tsuchiura')]: ['83M'],
-  [keyTS('Tokiwa','Iwaki')]: ['83M'],
-  [keyTS('Odoriko','Tokyo')]: ['3022M','3024M','4024M','3026M','3030M','4030M'],
-  [keyTS('Saphir','Tokyo')]: ['3002M'],
-  [keyTS('Rapid','Narita')]: ['1781H','1893H','1871H','2089H','2261H'],
-  [keyTS('Rapid','Toride')]: ['1791H','1951H','1933H','2061H','2187H','2191H','2281H'],
-  [keyTS('SpRapid','Tsuchiura')]: ['3181M','3189M'],
-  [keyTS('Local','Katsuta')]: ['1129M','1177M','1187M','1197M','1199M','1227M','1231M','1235M','1253M','1257M'],
-  [keyTS('Local','Tsuchiura')]: ['1135M','1145M','1147M','1149M','1151M','1153M','1155M','1157M','1159M','1161M','1163M','1165M','1167M','1169M','1171M','1173M','1185M','1193M','1239M','1243M','1247M','1251M','1259M'],
-  [keyTS('Local','Takahagi')]: ['1195M'],
-  [keyTS('Local','Mito')]: ['1175M','1179M','1223M'],
-  [keyTS('Local','Takasaki')]: ['1820E','1822E','1826E','1830E','1838E','1846E','1850E','1852E','1856E','1858E','1862E','1864E','1868E','1870E','1874E','1876E','1880E','1882E','1884E','1888E','1890E','1894E','1920E','1922E','1924E','1932E','1936E','1942E','1946E','3920E','3922E'],
-  [keyTS('Local','Utsunomiya')]: ['3620E','1524E','1530E','3622E','1532E','1540E','1556E','1564E','1568E','1574E','1578E','1584E','1590E','1596E','1622E','1630E','1632E','1634E','1638E','1644E','1646E','1652E','1656E','1662E','1664E','1668E','1672E','1674E'],
-  [keyTS('Local','Kagohara')]: ['1834E','1844E','1854E','1860E','1866E','1872E','1878E','1886E','1892E','1896E','1898E','1926E','1930E','1934E','1938E','1940E','1948E'],
-  [keyTS('Local','Koganei')]: ['1526E','1558E','1566E','1572E','1576E','1582E','1588E','1594E','1620E','1626E','1628E','1640E','1642E','1648E','1654E','1666E','1670E'],
-  [keyTS('Local','Koga')]: ['1580E','1586E','1592E','1598E','1624E','1636E','1650E','1660E'],
-  [keyTS('Local','Tokyo')]: ['722M','724M','726M','728M'],
-  [keyTS('Local','Ueno')]: ['1528E','1832E','1536E','1544E','1548E','1550E','1570E'],
-  [keyTS('Local','Maebashi')]: ['1928E','1944E'],
-  [keyTS('Local','Shin‑Maebashi')]: ['1840E']
-};
-function catalogFor(type, station){
-  const map={
-    'Local|Takasaki':1, 'Local|Utsunomiya':2, 'Local|Tsuchiura':3, 'Local|Katsuta':4, 'Local|Koganei':5, 'Local|Kagohara':6,
-    'Local|Tokyo':7, 'Hitachi|Iwaki':8, 'Local|Koga':9, 'Local|Ueno':10, 'Rapid|Toride':11,
-    'Tokiwa|Takahagi':12, 'Rapid|Narita':13, 'Hitachi|Sendai':14, 'Local|Mito':15, 'Hitachi|Haranomachi':16,
-    'Local|Maebashi':17, 'Local|Shin‑Maebashi':18, 'Tokiwa|Tsuchiura':19, 'Tokiwa|Katsuta':20,
-    'Odoriko|Tokyo':21, 'Saphir|Tokyo':22, 'Tokiwa|Iwaki':23, 'Local|Takahagi':24
-  };
-  return map[keyTS(type,station)]||0;
-}
+function keyTS(t,s){return `${t}|${s}`;}
+const TEMPLATES={};
+TEMPLATES['Hitachi|Sendai']=['3M','13M','21M'];TEMPLATES['Hitachi|Iwaki']=['1M','5M','7M','9M','11M','15M','17M','19M','23M','25M','27M','29M'];TEMPLATES['Hitachi|Haranomachi']=['13M'];
+TEMPLATES['Hitachi|Katsuta']=Array.from({length:15},(_,i)=>`${i*2+1}M`);
+TEMPLATES['Tokiwa|Takahagi']=['51M','73M','77M','81M'];
+TEMPLATES['Tokiwa|Katsuta']=['53M','55M','57M','59M','61M','63M','65M','67M','69M','71M','75M','79M','85M'];
+TEMPLATES['Tokiwa|Tsuchiura']=['83M']; TEMPLATES['Tokiwa|Iwaki']=['83M'];
+TEMPLATES['Odoriko|Tokyo']=['3022M','3024M','4024M','3026M','3030M','4030M'];
+TEMPLATES['Saphir|Tokyo']=['3002M'];
+TEMPLATES['Rapid|Narita']=['1781H','1893H','1871H','2089H','2261H'];
+TEMPLATES['Rapid|Toride']=['1791H','1951H','1933H','2061H','2187H','2191H','2281H'];
+TEMPLATES['SpRapid|Tsuchiura']=['3181M','3189M'];
+TEMPLATES['Local|Katsuta']=['1129M','1177M','1187M','1197M','1199M','1227M','1231M','1235M','1253M','1257M'];
+TEMPLATES['Local|Tsuchiura']=['1135M','1145M','1147M','1149M','1151M','1153M','1155M','1157M','1159M','1161M','1163M','1165M','1167M','1169M','1171M','1173M','1185M','1193M','1239M','1243M','1247M','1251M','1259M'];
+TEMPLATES['Local|Takahagi']=['1195M']; TEMPLATES['Local|Mito']=['1175M','1179M','1223M'];
+TEMPLATES['Local|Takasaki']=['1820E','1822E','1826E','1830E','1838E','1846E','1850E','1852E','1856E','1858E','1862E','1864E','1868E','1870E','1874E','1876E','1880E','1882E','1884E','1888E','1890E','1894E','1920E','1922E','1924E','1932E','1936E','1942E','1946E','3920E','3922E'];
+TEMPLATES['Local|Utsunomiya']=['3620E','1524E','1530E','3622E','1532E','1540E','1556E','1564E','1568E','1574E','1578E','1584E','1590E','1596E','1622E','1630E','1632E','1634E','1638E','1644E','1646E','1652E','1656E','1662E','1664E','1668E','1672E','1674E'];
+TEMPLATES['Local|Kagohara']=['1834E','1844E','1854E','1860E','1866E','1872E','1878E','1886E','1892E','1896E','1898E','1926E','1930E','1934E','1938E','1940E','1948E'];
+TEMPLATES['Local|Koganei']=['1526E','1558E','1566E','1572E','1576E','1582E','1588E','1594E','1620E','1626E','1628E','1640E','1642E','1648E','1654E','1666E','1670E'];
+TEMPLATES['Local|Koga']=['1580E','1586E','1592E','1598E','1624E','1636E','1650E','1660E'];
+TEMPLATES['Local|Tokyo']=['722M','724M','726M','728M']; TEMPLATES['Local|Ueno']=['1528E','1832E','1536E','1544E','1548E','1550E','1570E'];
+TEMPLATES['Local|Maebashi']=['1928E','1944E']; TEMPLATES['Local|Shin‑Maebashi']=['1840E'];
 
-/* ===== Train meta & formations ===== */
+const prob={'Mil-Spec':0.7992,'Restricted':0.1598,'Classified':0.032,'Covert':0.0064,'Exceedingly Rare':0.0026};
+
+/* train/formation + wear */
 function range(a,b,fmt){const out=[];for(let i=a;i<=b;i++)out.push(fmt?fmt(i):i);return out;}
-const FORM = {
-  'E657'      : range(1,19,(i)=>`K${i}`),
-  'E531'      : range(401,426,(i)=>`K${i}`),
-  'E231-1000U': [...range(501,541,(i)=>`U${i}`),...range(584,591,(i)=>`U${i}`)],
-  'E233-3000U': range(618,633,(i)=>`U${i}`),
-  'E231-1000K': range(1,42,(i)=>`K-${pad(i,2)}`),
-  'E233-3000K': range(1,17,(i)=>`E-${pad(i,2)}`),
-  'E257'      : range(1,13,(i)=>`NA-${pad(i,2)}`),
-  'E261'      : ['RS1','RS2']
-};
+const FORM={'E657':range(1,19,i=>`K${i}`),'E531':range(401,426,i=>`K${i}`),'E231-1000U':[...range(501,541,i=>`U${i}`),...range(584,591,i=>`U${i}`)],'E233-3000U':range(618,633,i=>`U${i}`),'E231-1000K':range(1,42,i=>`K-${String(i).padStart(2,'0')}`),'E233-3000K':range(1,17,i=>`E-${String(i).padStart(2,'0')}`),'E257':range(1,13,i=>`NA-${String(i).padStart(2,'0')}`),'E261':['RS1','RS2']};
 function chooseTrainMeta(it){
-  const jobanStations=['Tsuchiura','Katsuta','Mito','Takahagi','Toride','Iwaki','Haranomachi','Sendai','Narita'];
-  const utsuTakaStations=['Takasaki','Utsunomiya','Kagohara','Koganei','Koga','Ueno','Tokyo','Maebashi','Shin‑Maebashi'];
-  if(it.type==='Hitachi' || it.type==='Tokiwa'){ return {line:tLine('Joban'), series:'E657', formation:rand(FORM['E657'])}; }
-  if(it.type==='Odoriko'){ return {line:tLine('Odoriko'), series:'E257', formation:rand(FORM['E257'])}; }
-  if(it.type==='Saphir'){ return {line:tLine('Saphir'), series:'E261', formation:rand(FORM['E261'])}; }
-  if(it.type==='Rapid' && it.station==='Narita'){ const series=Math.random()<0.5?'E231-1000':'E233-3000'; const formation=rand(series==='E231-1000'?FORM['E231-1000K']:FORM['E233-3000K']); return {line:tLine('Narita'), series, formation}; }
-  if(it.type==='Rapid' && it.station==='Toride'){ return {line:tLine('JobanRapid'), series:'E531', formation:rand(FORM['E531'])}; }
-  if(it.type==='SpRapid' && it.station==='Tsuchiura'){ return {line:tLine('JobanSpRapid'), series:'E531', formation:rand(FORM['E531'])}; }
-  if(jobanStations.includes(it.station)){ return {line:tLine('Joban'), series:'E531', formation:rand(FORM['E531'])}; }
-  if(utsuTakaStations.includes(it.station)){
-    const series=Math.random()<0.5?'E233-3000':'E231-1000';
-    const lineKey=(it.station==='Tokyo'||it.station==='Ueno')?(['Utsu','Taka','Tokaido'][Math.floor(Math.random()*3)]):(['Takasaki','Maebashi','Shin‑Maebashi','Kagohara'].includes(it.station)?'Taka':'Utsu');
-    const formation=rand(series==='E233-3000'?(lineKey==='Tokaido'?FORM['E233-3000K']:FORM['E233-3000U']):(lineKey==='Tokaido'?FORM['E231-1000K']:FORM['E231-1000U']));
-    return {line:tLine(lineKey), series, formation};
-  }
-  return {line:tLine('Joban'), series:'E531', formation:rand(FORM['E531'])};
+  const joban=['Tsuchiura','Katsuta','Mito','Takahagi','Toride','Iwaki','Haranomachi','Sendai','Narita'];
+  const taka=['Takasaki','Maebashi','Shin‑Maebashi','Kagohara'];
+  const utsu=['Utsunomiya','Koganei','Koga'];
+  if(it.type==='Hitachi'||it.type==='Tokiwa') return {lineKey:'Joban',series:'E657',formation:rand(FORM['E657'])};
+  if(it.type==='Odoriko')return{lineKey:'Odoriko',series:'E257',formation:rand(FORM['E257'])};
+  if(it.type==='Saphir')return{lineKey:'Saphir',series:'E261',formation:rand(FORM['E261'])};
+  if(it.type==='Rapid'&&it.station==='Narita'){const s=Math.random()<0.5?'E231-1000':'E233-3000';return{lineKey:'Narita',series:s,formation:rand(s==='E231-1000'?FORM['E231-1000K']:FORM['E233-3000K'])};}
+  if(it.type==='Rapid'&&it.station==='Toride')return{lineKey:'JobanRapid',series:'E531',formation:rand(FORM['E531'])};
+  if(it.type==='SpRapid'&&it.station==='Tsuchiura')return{lineKey:'JobanSpRapid',series:'E531',formation:rand(FORM['E531'])};
+  if(joban.includes(it.station))return{lineKey:'Joban',series:'E531',formation:rand(FORM['E531'])};
+  if(taka.includes(it.station)){const s=Math.random()<0.5?'E233-3000':'E231-1000';return{lineKey:'Taka',series:s,formation:rand(s==='E233-3000'?FORM['E233-3000U']:FORM['E231-1000U'])};}
+  if(utsu.includes(it.station)){const s=Math.random()<0.5?'E233-3000':'E231-1000';return{lineKey:'Utsu',series:s,formation:rand(s==='E233-3000'?FORM['E233-3000U']:FORM['E231-1000U'])};}
+  if(['Tokyo','Ueno'].includes(it.station)){const lineKey=rand(['Utsu','Taka','Tokaido']);const s=Math.random()<0.5?'E233-3000':'E231-1000';const f=rand(s==='E233-3000'?(lineKey==='Tokaido'?FORM['E233-3000K']:FORM['E233-3000U']):(lineKey==='Tokaido'?FORM['E231-1000K']:FORM['E231-1000U']));return{lineKey,series:s,formation:f};}
+  return{lineKey:'Joban',series:'E531',formation:rand(FORM['E531'])};
 }
-
-/* ===== Wear logic ===== */
 function exteriorFor(f){ if(f<=0.07)return'FN'; if(f<=0.15)return'MW'; if(f<=0.38)return'FT'; if(f<=0.45)return'WW'; return'BS'; }
 function rangeBySeries(series){ if(series==='E531'||series==='E233-3000') return {min:0,max:1}; if(series==='E231-1000'||series==='E257') return {min:0.06,max:0.90}; return {min:0,max:0.85}; }
 function generateWear(series){ const base=Math.random(); const r=rangeBySeries(series); const final=base*(r.max-r.min)+r.min; const f32=Math.fround(final); return {final,f32,ext:exteriorFor(final)}; }
+function genMetaFor(it){
+  const tm=chooseTrainMeta(it); const wear=generateWear(tm.series); const catalog=catalogFor(it.type,it.station);
+  const pool=(TEMPLATES[`${it.type}|${it.station}`]||['0000X']); const tn=rand(pool);
+  return {version:2,type:it.type,station:it.station,rarity:it.rarity,lineKey:tm.lineKey,series:tm.series,formation:tm.formation,
+    trainType:`${LINES[LANG][tm.lineKey]} ${tm.series}`, catalog, template:`${tn} ${tm.formation}`, wearF32:wear.f32, wearRaw:wear.final, exterior:exteriorFor(wear.final), createdAt:Date.now()};
+}
+function catalogFor(type,station){const map={'Local|Takasaki':1,'Local|Utsunomiya':2,'Local|Tsuchiura':3,'Local|Katsuta':4,'Local|Koganei':5,'Local|Kagohara':6,'Local|Tokyo':7,'Hitachi|Iwaki':8,'Local|Koga':9,'Local|Ueno':10,'Rapid|Toride':11,'Tokiwa|Takahagi':12,'Rapid|Narita':13,'Hitachi|Sendai':14,'Local|Mito':15,'Hitachi|Haranomachi':16,'Local|Maebashi':17,'Local|Shin‑Maebashi':18,'Tokiwa|Tsuchiura':19,'Tokiwa|Katsuta':20,'Odoriko|Tokyo':21,'Saphir|Tokyo':22,'Tokiwa|Iwaki':23,'Local|Takahagi':24};return map[`${type}|${station}`]||0;}
 
-/* ===== UI text ===== */
+/* ===== UI helpers ===== */
 function detectInitialLang(){ const nav=(navigator.languages&&navigator.languages[0])||navigator.language||'en'; if(/^ja/i.test(nav))LANG='ja'; else if(/^zh/i.test(nav))LANG='zh'; else LANG='en'; }
 function html(id,s){const el=document.getElementById(id); if(el) el.innerHTML=s;}
 function refreshTexts(){
@@ -524,24 +628,29 @@ function refreshTexts(){
   html('bgLbl1',UI[LANG].bg); html('bgLbl2',UI[LANG].bg); html('bgLbl3',UI[LANG].bg);
   html('invBtnTxt1',UI[LANG].inventory); html('invBtnTxt2',UI[LANG].inventory); html('invBtnTxt3',UI[LANG].inventory);
   html('hudTitle2',UI[LANG].unlock); html('hudSub2',UI[LANG].sub); html('onceNote',UI[LANG].note); html('openPrompt',UI[LANG].prompt);
-  html('insColl',UI[LANG].coll); html('closeBtn',UI[LANG].close);
+  html('insColl',UI[LANG].coll); html('closeBtn',UI[LANG].close); html('skipBtn',UI[LANG].close);
   html('invTitle',UI[LANG].inventory); html('invClear',UI[LANG].clearInv); html('invClose',UI[LANG].close);
   html('confirmText',UI[LANG].areYouSure); html('confirmYes',UI[LANG].yes); html('confirmNo',UI[LANG].cancel);
-  buildInvSortOptions();
+  html('quickLbl',UI[LANG].quick); html('qNew',UI[LANG].newItem); html('qClose',UI[LANG].cont);
+  document.title = UI[LANG].tabTitle;
+  document.getElementById('invCaseName').textContent = UI[LANG].coll;
+  document.getElementById('invCaseDesc').textContent =
+    LANG==='ja' ? 'このケースの内容：各レア度に対応する駅名スキン。所持済みはチェック表示。'
+      : LANG==='zh' ? '本箱子内容：按稀有度分类的“车站”皮肤。已拥有项前有对勾。'
+      : 'This case: stations as skins by rarity. Owned entries show a tick.';
 }
 
-/* ===== Overview grid (sorted by rarity then English A–Z) ===== */
+/* ===== Overview build/sort ===== */
 const rarityIdx = r => ({'Mil-Spec':0,'Restricted':1,'Classified':2,'Covert':3,'Exceedingly Rare':4}[r]??9);
-const grid=document.getElementById('grid');
+const grid=document.getElementById('grid'); let ITEMS_SORTED=[];
 function buildGrid(){
   grid.innerHTML='';
   const sorted = ITEMS.slice().sort((a,b)=>{
-    const r = rarityIdx(a.rarity)-rarityIdx(b.rarity);
-    if(r!==0) return r;
-    const t = tTypeEn(a.type).localeCompare(tTypeEn(b.type),'en',{sensitivity:'base'});
-    if(t!==0) return t;
+    const r = rarityIdx(a.rarity)-rarityIdx(b.rarity); if(r!==0) return r;
+    const t = tTypeEn(a.type).localeCompare(tTypeEn(b.type),'en',{sensitivity:'base'}); if(t!==0) return t;
     return a.station.localeCompare(b.station,'en',{sensitivity:'base'});
   });
+  ITEMS_SORTED=sorted;
   sorted.forEach((it,idx)=>{
     const wrap=document.createElement('div'); wrap.className='cardWrap';
     const box=document.createElement('div'); box.className='cardBox'; box.innerHTML=`<div class="stripe ${stripe(it.rarity)}"></div>`;
@@ -557,302 +666,171 @@ function buildGrid(){
 function hookBG(id){const el=document.getElementById(id); if(!el)return; el.addEventListener('change',e=>{const f=e.target.files[0]; if(!f)return; const rd=new FileReader(); rd.onload=()=>{document.documentElement.style.setProperty('--bg',`url('${rd.result}')`)}; rd.readAsDataURL(f);});}
 ['bg1','bg2','bg3'].forEach(hookBG);
 document.documentElement.style.setProperty('--bg','linear-gradient(120deg,#616c7a,#8a97a8)');
-document.getElementById('logoUp')?.addEventListener('change',e=>{const f=e.target.files[0]; if(!f)return; const rd=new FileReader(); rd.onload=()=>{document.getElementById('logoImg').src=rd.result;}; rd.readAsDataURL(f);});
+document.getElementById('logoUp')?.addEventListener('change',e=>{const f=e.target.files[0]; if(!f)return; const rd=new FileReader(); rd.onload=()=>{document.getElementById('logoImg').src=rd.result; document.getElementById('qLogoSmall').src=rd.result; document.getElementById('invCaseLogo').src=rd.result;}; rd.readAsDataURL(f);});
 
 /* ===== Pages ===== */
 const pages={ov:document.getElementById('page-overview'), op:document.getElementById('page-open'), ins:document.getElementById('page-inspect')};
-function show(p){
-  Object.values(pages).forEach(el=>el.classList.remove('show'));
-  pages[p].classList.add('show','fadeIn');
-  updateTitlesLayout();
-  if(p==='ov'){ document.getElementById('invOpenBtn_in').classList.remove('hidden'); }
-}
+function show(p){ Object.values(pages).forEach(el=>el.classList.remove('show')); pages[p].classList.add('show','fadeIn'); updateTitlesLayout(); if(p==='ov'){ document.getElementById('invOpenBtn_in').classList.remove('hidden'); } }
 
 /* ===== Roll logic ===== */
-const prob={'Mil-Spec':0.7992,'Restricted':0.1598,'Classified':0.032,'Covert':0.0064,'Exceedingly Rare':0.0026};
-function pickRarity(){const order=Object.keys(prob);const r=Math.random();let a=0;for(const k of order){a+=prob[k];if(r<a)return k;}return order.at(-1);}
-function weighted(){const arr=[];ITEMS.forEach(i=>{const n=Math.max(1,Math.round(prob[i.rarity]*180));for(let j=0;j<n;j++)arr.push(i);});return arr;}
+const probMap=prob;
+function pickRarity(){const order=Object.keys(probMap);const r=Math.random();let a=0;for(const k of order){a+=probMap[k];if(r<a)return k;}return order.at(-1);}
+function weighted(){const arr=[];ITEMS.forEach(i=>{const n=Math.max(1,Math.round(probMap[i.rarity]*180));for(let j=0;j<n;j++)arr.push(i);});return arr;}
 function pickDrop(){const rar=pickRarity();const pool=ITEMS.filter(x=>x.rarity===rar);return pool[Math.floor(Math.random()*pool.length)];}
-
-const viewport=document.getElementById('viewport');
-const track=document.getElementById('track');
-const trackClone=document.getElementById('trackClone');
+const viewport=document.getElementById('viewport'); const track=document.getElementById('track'); const trackClone=document.getElementById('trackClone');
 
 function buildRollRow(final, onDone){
   track.innerHTML=''; trackClone.innerHTML='';
-  const total=150, stop=120, pool=weighted(); const tiles=[];
-  for(let i=0;i<total;i++) tiles.push(pool[Math.floor(Math.random()*pool.length)]);
-  tiles[stop]=final;
-  tiles.forEach(t=>{
-    const a=document.createElement('div'); a.className='tile';
-    a.innerHTML=`<div>${tType(t.type)} | ${stationName(t.station)}</div><div class="stripe ${stripe(t.rarity)}"></div>`;
-    track.appendChild(a);
-    trackClone.appendChild(a.cloneNode(true));
-  });
-  const tileW=279+10; const centerOff=(viewport.clientWidth/2)-(tileW/2); const target=(stop*tileW)-centerOff;
+  const total=150, stop=120, pool=weighted(); const tiles=[]; for(let i=0;i<total;i++) tiles.push(pool[Math.floor(Math.random()*pool.length)]); tiles[stop]=final;
+  tiles.forEach(t=>{ const a=document.createElement('div'); a.className='tile'; a.innerHTML=`<div>${tType(t.type)} | ${stationName(t.station)}</div><div class="stripe ${stripe(t.rarity)}"></div>`; track.appendChild(a); trackClone.appendChild(a.cloneNode(true)); });
+
+  const first=track.querySelector('.tile'); const gap=parseFloat(getComputedStyle(track).gap)||10;
+  const tileWidth=first?first.getBoundingClientRect().width:279; const tileFull=tileWidth+gap;
+  const centerOff=(viewport.clientWidth/2)-(tileWidth/2); const target=(stop*tileFull)-centerOff;
   const dur=4200; const t0=performance.now(); const ease=t=>1-Math.pow(1-t,3);
-  function step(now){const p=Math.min(1,(now-t0)/dur); const x=-target*ease(p); track.style.transform=`translateX(${x}px)`; trackClone.style.transform=`translateX(${x}px)`; if(p<1){requestAnimationFrame(step)} else {onDone&&onDone();}}
+  function step(now){ const p=Math.min(1,(now-t0)/dur); const x=-target*ease(p); track.style.transform=`translateX(${x}px)`; trackClone.style.transform=`translateX(${x}px)`; if(p<1){requestAnimationFrame(step)} else {onDone&&onDone();} }
   requestAnimationFrame(step);
 }
 function resetOpenPage(){
   document.getElementById('rollWrap').classList.remove('wheelIn');
   document.getElementById('lens').classList.remove('show');
-  document.getElementById('openBottom').classList.remove('show');
+  document.getElementById('openBottom').classList.remove('show','extended');
   document.getElementById('curtains').classList.remove('play');
   document.getElementById('openScene').classList.remove('dim');
   track.innerHTML=''; trackClone.innerHTML=''; track.style.transform='translateX(0)'; trackClone.style.transform='translateX(0)';
   const wrap=document.getElementById('case-open'); const crate=document.getElementById('crate-open'); const zcrate=document.getElementById('zcrate');
   wrap.classList.remove('fall','blurred'); crate.classList.remove('openLid'); zcrate.classList.remove('zopen'); void wrap.offsetWidth; void crate.offsetWidth; void zcrate.offsetWidth;
 }
+function genDrop(base){ return ({...base, meta: genMetaFor(base)}); }
 
-/* ===== Generated meta ===== */
-function genMetaFor(it){
-  const tm=chooseTrainMeta(it);
-  const wear=generateWear(tm.series);
-  const catalog=catalogFor(it.type,it.station);
-  const pool=TEMPLATES[keyTS(it.type,it.station)]||['0000X'];
-  const tn=rand(pool);
-  return {
-    version:2,
-    type:it.type, station:it.station, rarity:it.rarity,
-    trainType:`${tm.line} ${tm.series}`,
-    series:tm.series, line:tm.line, formation:tm.formation,
-    catalog,
-    template:`${tn} ${tm.formation}`,
-    wearF32:wear.f32, wearRaw:wear.final,
-    exterior:exteriorFor(wear.final),
-    createdAt:Date.now()
-  };
-}
-
-/* ===== OPEN flow ===== */
+/* OPEN flow */
+let pendingDrop=null, skippedDuringOpen=false;
 document.getElementById('openBtn').onclick=()=>{
-  closeInventory(true);
-  show('op'); resetOpenPage(); syncLangSelectors(); refreshTexts();
+  const quickOn=document.getElementById('quickChk').checked; const count=clamp(parseInt(document.getElementById('qNum').value||'1',10)||1,1,500);
+  if(quickOn){
+    const drops=[]; for(let i=0;i<count;i++){ const base=pickDrop(); const full=genDrop(base); drops.push(full); addToInventory(full); }
+    renderMiniInventory(); showQuickModal(drops,0); return;
+  }
+  closeInventory(true); show('op'); resetOpenPage(); syncLangSelectors(); refreshTexts();
+  pendingDrop=pickDrop(); skippedDuringOpen=false;
 
-  const wrap=document.getElementById('case-open'); const crate=document.getElementById('crate-open');
-  const lid=document.getElementById('lid-open'); const zlid=document.getElementById('zlid');
-
+  const wrap=document.getElementById('case-open'); const crate=document.getElementById('crate-open'); const lid=document.getElementById('lid-open'); const zlid=document.getElementById('zlid');
   wrap.classList.add('fall');
-  wrap.addEventListener('animationend', function onFall(){
-    wrap.removeEventListener('animationend', onFall);
+  wrap.addEventListener('animationend', function onFall(){ wrap.removeEventListener('animationend', onFall);
     crate.classList.add('openLid'); document.getElementById('zcrate').classList.add('zopen');
-
-    const onLidEnd=(e)=>{
-      if(e.animationName!=='lidOpen')return;
-      lid.removeEventListener('animationend', onLidEnd); zlid.removeEventListener('animationend', onLidEnd);
+    const onLidEnd=(e)=>{ if(e.animationName!=='lidOpen')return; lid.removeEventListener('animationend', onLidEnd); zlid.removeEventListener('animationend', onLidEnd);
       wrap.classList.add('blurred'); document.getElementById('openScene').classList.add('dim');
-
-      const base=pickDrop();
-      const drop={...base, meta: genMetaFor(base)};
-      buildRollRow(base, ()=>{
-        addToInventory(drop);
-        setTimeout(()=>openInspectFromRoll(drop), 600);
-      });
-
-      setTimeout(()=>{
-        document.getElementById('rollWrap').classList.add('wheelIn');
-        document.getElementById('lens').classList.add('show');
-        document.getElementById('curtains').classList.add('play');
-        document.getElementById('openBottom').classList.add('show');
-        html('openPrompt',UI[LANG].prompt);
-        updateLensSizing();
-      },50);
+      const drop=genDrop(pendingDrop);
+      buildRollRow(pendingDrop,()=>{ if(skippedDuringOpen) return; addToInventory(drop); setTimeout(()=>openInspectFromRoll(drop),600); });
+      setTimeout(()=>{ document.getElementById('rollWrap').classList.add('wheelIn'); document.getElementById('lens').classList.add('show'); document.getElementById('curtains').classList.add('play');
+        const ob=document.getElementById('openBottom'); ob.classList.add('show','extended'); html('openPrompt',UI[LANG].prompt); updateLensSizing(); },50);
     };
     lid.addEventListener('animationend', onLidEnd); zlid.addEventListener('animationend', onLidEnd);
   });
+};
+document.getElementById('skipBtn').onclick=()=>{
+  if(!pendingDrop)return;
+  skippedDuringOpen=true; const drop=genDrop(pendingDrop); addToInventory(drop); renderMiniInventory(); show('ov'); showQuickModal([drop],0);
 };
 
 /* ===== INSPECT ===== */
 let currentItem=null, curIdx=0, inspectMode='items';
 let invItems=[], curInvIndex=0;
-
-function descBySeries(series, it){
-  if(it.type==='Rapid' && it.station==='Narita') return DESC_RAPID_NARITA[LANG];
-  const d=DESC_MAP[series]||DESC_MAP['E531'];
-  return d[LANG];
-}
+function descBySeries(series,it){ if(it.type==='Rapid'&&it.station==='Narita')return DESC_RAPID_NARITA[LANG]; const d=DESC_MAP[series]||DESC_MAP['E531']; return d[LANG]; }
+function deriveLineKey(it,meta){ if(meta&&meta.lineKey)return meta.lineKey; if(it.type==='Hitachi'||it.type==='Tokiwa')return'Joban'; if(it.type==='Odoriko')return'Odoriko'; if(it.type==='Saphir')return'Saphir'; if(it.type==='Rapid')return(it.station==='Narita'?'Narita':'JobanRapid'); if(it.type==='SpRapid')return'JobanSpRapid'; const joban=['Tsuchiura','Katsuta','Mito','Takahagi','Toride','Iwaki','Haranomachi','Sendai','Narita']; if(joban.includes(it.station))return'Joban'; const taka=['Takasaki','Maebashi','Shin‑Maebashi','Kagohara']; if(taka.includes(it.station))return'Taka'; if(['Utsunomiya','Koganei','Koga'].includes(it.station))return'Utsu'; if(['Tokyo','Ueno'].includes(it.station))return'Tokaido'; return'Joban'; }
+function trainTypeLabel(it){ const key=deriveLineKey(it,it.meta); const series=it?.meta?.series||'E531'; return `${LINES[LANG][key]} ${series}`; }
+function fitBigText(){ const el=document.getElementById('insBig'); if(!el) return; if(window.innerWidth>900){ el.style.fontSize='64px'; return; } let size=64; el.style.fontSize=size+'px'; el.style.whiteSpace='nowrap'; const max=Math.floor(window.innerWidth*0.90); for(let i=0;i<32 && el.scrollWidth>max; i++){ size-=2; el.style.fontSize=size+'px'; } }
 function setHeader(it){
-  currentItem=it;
-  const title=displayKey(it);
-  document.getElementById('insTitle').textContent=title;
-  document.getElementById('insBig').textContent=title;
-  html('insColl',UI[LANG].coll);
-  const bar=document.getElementById('insBar'); bar.style.width=Math.min(Math.max(160, title.length*9+60), 460)+"px"; bar.style.background=colorFor(it.rarity);
-
-  const series = it.meta?.series || (it.type==='Hitachi'||it.type==='Tokiwa'?'E657': it.type==='Odoriko'?'E257': it.type==='Saphir'?'E261': (['Tsuchiura','Katsuta','Mito','Takahagi','Toride','Narita'].includes(it.station)?'E531':'E233-3000'));
-  const trainDesc = descBySeries(series, it);
-  const tag = it.tag ? it.tag[LANG] : '';
-  document.getElementById('insDesc').innerHTML = `<div class="descTrain">${trainDesc}</div><div class="descStation"><em>${tag}</em></div>`;
-
-  const infoSlot=document.getElementById('infoSlot');
-  if(inspectMode==='roll' || inspectMode==='inventory'){ infoSlot.classList.remove('hidden'); fillInfo(it); } else { infoSlot.classList.add('hidden'); hideInfo(true); }
+  currentItem=it; const title=displayKey(it);
+  document.getElementById('insTitle').textContent=title; document.getElementById('insBig').textContent=title; fitBigText();
+  html('insColl',UI[LANG].coll); const bar=document.getElementById('insBar'); bar.style.width=Math.min(Math.max(160, title.length*9+60), 460)+"px"; bar.style.background=colorFor(it.rarity);
+  const series=it.meta?.series || (it.type==='Hitachi'||it.type==='Tokiwa'?'E657': it.type==='Odoriko'?'E257': it.type==='Saphir'?'E261': (['Tsuchiura','Katsuta','Mito','Takahagi','Toride','Narita'].includes(it.station)?'E531':'E233-3000'));
+  const trainDesc=descBySeries(series,it); const tag=it.tag?it.tag[LANG]:'';
+  document.getElementById('insDesc').innerHTML=`<div class="descTrain">${trainDesc}</div><div class="descStation"><em>${tag}</em></div>`;
+  const infoSlot=document.getElementById('infoSlot'); if(inspectMode==='roll'||inspectMode==='inventory'){ infoSlot.classList.remove('hidden'); fillInfo(it); hideInfo(); } else { infoSlot.classList.add('hidden'); hideInfo(); }
   html('closeBtn',UI[LANG].close);
 }
-
 function fillInfo(it){
   if(!it.meta){ it.meta=genMetaFor(it); }
-  const lines=document.getElementById('infoLines');
-  const extFull=EXT_NAMES[LANG][it.meta.exterior];
-  const wear6=it.meta.wearF32.toFixed(6), wear9=it.meta.wearF32.toFixed(9);
-  lines.innerHTML='';
-  const add=(k,v,isWear=false)=>{
-    const d=document.createElement('div'); d.className='infoLine';
-    d.innerHTML=`<b>${k}:</b> <span class="val">${v}</span>`;
-    if(isWear){
-      d.addEventListener('click',()=>{ const s=d.querySelector('.val'); s.textContent=(s.textContent===wear6?wear9:wear6); });
-    }
-    lines.appendChild(d);
-  };
-  add(UI[LANG].tt, it.meta.trainType);
-  add(UI[LANG].tc, String(it.meta.catalog));
-  add(UI[LANG].tpl, it.meta.template);
-  add(UI[LANG].wear, wear6, true);
-  add(UI[LANG].ext, extFull);
-  positionInfoPanel(); // position to i-button
+  const lines=document.getElementById('infoLines'); const extFull=EXT_NAMES[LANG][it.meta.exterior]; const wear6=it.meta.wearF32.toFixed(6), wear9=it.meta.wearF32.toFixed(9);
+  lines.innerHTML=''; const add=(k,v,isWear=false)=>{ const d=document.createElement('div'); d.className='infoLine'; d.innerHTML=`<b>${k}:</b> <span class="val">${v}</span>`; if(isWear){ d.addEventListener('click',()=>{ const s=d.querySelector('.val'); s.textContent=(s.textContent===wear6?wear9:wear6); }); } lines.appendChild(d); };
+  add(UI[LANG].tt, trainTypeLabel(it)); add(UI[LANG].tc, String(it.meta.catalog)); add(UI[LANG].tpl, it.meta.template); add(UI[LANG].wear, wear6, true); add(UI[LANG].ext, extFull); positionInfoPanel();
 }
-function hideInfo(immediate=false){
-  const p=document.getElementById('infoPanel');
-  if(immediate){ p.classList.remove('show'); return; }
-  p.classList.remove('show');
-}
-
-/* INFO panel behavior: hover + click sticky */
+/* info panel behavior */
 let infoSticky=false, hoverBtn=false, hoverPanel=false, hideTimer=null;
-const infoBtnEl=document.getElementById('infoBtn');
-const infoPanelEl=document.getElementById('infoPanel');
-function showInfo(){ infoPanelEl.classList.add('show'); positionInfoPanel(); }
-function scheduleHide(){ if(infoSticky) return; clearTimeout(hideTimer); hideTimer=setTimeout(()=>{ if(!hoverBtn && !hoverPanel) hideInfo(); }, 120); }
-function positionInfoPanel(){
-  // place above bottom bar, centered on the i-button, clamped to screen
-  const btn=infoBtnEl.getBoundingClientRect();
-  const bar=document.querySelector('#page-inspect .bar70').getBoundingClientRect();
-  // temp show to measure width
-  infoPanelEl.style.visibility='hidden'; infoPanelEl.classList.add('show');
-  const pw = infoPanelEl.offsetWidth, ph=infoPanelEl.offsetHeight;
-  const center = btn.left + btn.width/2;
-  let left = center - pw/2;
-  left = clamp(left, 8, window.innerWidth - pw - 8);
-  const top = Math.max(8, bar.top - ph - 8);
-  infoPanelEl.style.left = left+'px';
-  infoPanelEl.style.top = top+'px';
-  infoPanelEl.style.visibility='visible';
-}
+const infoBtnEl=document.getElementById('infoBtn'); const infoPanelEl=document.getElementById('infoPanel');
+function showInfo(){ positionInfoPanel(); infoPanelEl.classList.remove('show'); void infoPanelEl.offsetWidth; infoPanelEl.classList.add('show'); infoPanelEl.style.visibility='visible'; }
+function scheduleHide(){ if(infoSticky)return; clearTimeout(hideTimer); hideTimer=setTimeout(()=>{ if(!hoverBtn && !hoverPanel) hideInfo(); },130); }
+function hideInfo(){ infoPanelEl.classList.remove('show'); infoPanelEl.style.visibility='hidden'; infoPanelEl.style.left='-9999px'; infoPanelEl.style.top='-9999px'; }
+function positionInfoPanel(){ const btn=infoBtnEl.getBoundingClientRect(); const pw=infoPanelEl.offsetWidth||260; const ph=infoPanelEl.offsetHeight||120; let left=btn.left+(btn.width/2)-(pw/2); left=clamp(left,8,window.innerWidth-pw-8); let top=btn.top-ph-8; if(top<8){ top=btn.bottom+8; } infoPanelEl.style.left=left+'px'; infoPanelEl.style.top=top+'px'; }
+infoBtnEl.addEventListener('mouseenter',()=>{hoverBtn=true; showInfo();}); infoBtnEl.addEventListener('mouseleave',()=>{hoverBtn=false; scheduleHide();});
+infoPanelEl.addEventListener('mouseenter',()=>{hoverPanel=true; showInfo();}); infoPanelEl.addEventListener('mouseleave',()=>{hoverPanel=false; scheduleHide();});
+infoBtnEl.addEventListener('click',e=>{ e.stopPropagation(); infoSticky=!infoSticky; if(infoSticky) showInfo(); else hideInfo(); });
 
-infoBtnEl.addEventListener('mouseenter',()=>{hoverBtn=true; showInfo();});
-infoBtnEl.addEventListener('mouseleave',()=>{hoverBtn=false; scheduleHide();});
-infoPanelEl.addEventListener('mouseenter',()=>{hoverPanel=true; showInfo();});
-infoPanelEl.addEventListener('mouseleave',()=>{hoverPanel=false; scheduleHide();});
-infoBtnEl.addEventListener('click',()=>{ infoSticky=!infoSticky; if(infoSticky) showInfo(); else hideInfo(); });
-
-/* overview -> inspect (no info icon) */
-function openInspectItemsPath(it, idx){
-  inspectMode='items'; curIdx=idx; setHeader(it);
-  document.getElementById('prevBtn').classList.remove('hidden'); document.getElementById('nextBtn').classList.remove('hidden');
-  document.getElementById('invOpenBtn_in').classList.remove('hidden'); show('ins');
-}
-/* roll -> inspect (no arrows, hide inv button) */
-function openInspectFromRoll(it){
-  inspectMode='roll'; setHeader(it);
-  document.getElementById('prevBtn').classList.add('hidden'); document.getElementById('nextBtn').classList.add('hidden');
-  document.getElementById('invOpenBtn_in').classList.add('hidden'); show('ins');
-}
-/* inventory -> inspect (overlay; drawer remains logically open) */
+/* overview -> inspect */
+function openInspectItemsPath(it, idx){ inspectMode='items'; curIdx=idx; setHeader(it); document.getElementById('prevBtn').classList.remove('hidden'); document.getElementById('nextBtn').classList.remove('hidden'); document.getElementById('invOpenBtn_in').classList.remove('hidden'); show('ins'); }
+function openInspectFromRoll(it){ inspectMode='roll'; setHeader(it); document.getElementById('prevBtn').classList.add('hidden'); document.getElementById('nextBtn').classList.add('hidden'); document.getElementById('invOpenBtn_in').classList.add('hidden'); show('ins'); }
 function openInspectInventoryPath(index){
-  inspectMode='inventory';
-  invItems = buildInvItemsList(); curInvIndex=index;
-  setHeader(invItems[curInvIndex]);
-  pages.ov.classList.add('show'); pages.ins.classList.add('show','fadeIn'); invEl.classList.add('behind');
+  inspectMode='inventory'; invItems=buildInvItemsList(); curInvIndex=index; setHeader(invItems[curInvIndex]);
+  pages.ov.classList.add('show'); pages.ins.classList.add('show','fadeIn'); document.getElementById('inventory').classList.add('behind');
   document.getElementById('prevBtn').classList.remove('hidden'); document.getElementById('nextBtn').classList.remove('hidden');
-  document.getElementById('invOpenBtn_in').classList.remove('hidden');
-  updateTitlesLayout();
+  document.getElementById('invOpenBtn_in').classList.remove('hidden'); infoSticky=false; hideInfo(); updateTitlesLayout();
 }
-document.getElementById('prevBtn').onclick=()=>{
-  if(inspectMode==='inventory'){ invItems=buildInvItemsList(); if(!invItems.length)return; curInvIndex=(curInvIndex-1+invItems.length)%invItems.length; setHeader(invItems[curInvIndex]); }
-  else{ curIdx=(curIdx-1+ITEMS.length)%ITEMS.length; setHeader(ITEMS[curIdx]); }
-};
-document.getElementById('nextBtn').onclick=()=>{
-  if(inspectMode==='inventory'){ invItems=buildInvItemsList(); if(!invItems.length)return; curInvIndex=(curInvIndex+1)%invItems.length; setHeader(invItems[curInvIndex]); }
-  else{ curIdx=(curIdx+1)%ITEMS.length; setHeader(ITEMS[curIdx]); }
-};
-document.getElementById('closeBtn').onclick=()=>{
-  if(inspectMode==='inventory'){ pages.ins.classList.remove('show'); invEl.classList.remove('behind'); updateTitlesLayout(); hideInfo(true); infoSticky=false; }
-  else{ show('ov'); hideInfo(true); infoSticky=false; }
-};
+document.getElementById('prevBtn').onclick=()=>{ if(inspectMode==='inventory'){ invItems=buildInvItemsList(); if(!invItems.length)return; curInvIndex=(curInvIndex-1+invItems.length)%invItems.length; setHeader(invItems[curInvIndex]); } else { if(!ITEMS_SORTED.length) ITEMS_SORTED=ITEMS.slice(); curIdx=(curIdx-1+ITEMS_SORTED.length)%ITEMS_SORTED.length; setHeader(ITEMS_SORTED[curIdx]); } };
+document.getElementById('nextBtn').onclick=()=>{ if(inspectMode==='inventory'){ invItems=buildInvItemsList(); if(!invItems.length)return; curInvIndex=(curInvIndex+1)%invItems.length; setHeader(invItems[curInvIndex]); } else { if(!ITEMS_SORTED.length) ITEMS_SORTED=ITEMS.slice(); curIdx=(curIdx+1)%ITEMS_SORTED.length; setHeader(ITEMS_SORTED[curIdx]); } };
+document.getElementById('closeBtn').onclick=()=>{ if(inspectMode==='inventory'){ pages.ins.classList.remove('show'); document.getElementById('inventory').classList.remove('behind'); updateTitlesLayout(); hideInfo(); infoSticky=false; } else { show('ov'); hideInfo(); infoSticky=false; } };
 
-/* ===== Inventory storage (v2) ===== */
+/* ===== Inventory store & UI ===== */
 const INV_KEY='utl_inventory_v2';
 function loadInv(){ try{ return JSON.parse(sessionStorage.getItem(INV_KEY)||'[]'); }catch{ return []; } }
 function saveInv(arr){ sessionStorage.setItem(INV_KEY, JSON.stringify(arr)); }
-function addToInventory(genIt){
-  const inv=loadInv();
-  const rec = { v:2, type:genIt.type, station:genIt.station, rarity:genIt.rarity, tag:genIt.tag, meta:genIt.meta, createdAt:Date.now() };
-  inv.push(rec); saveInv(inv); renderInventory(); renderMiniInventory();
-}
-
-/* ===== Inventory rendering + sorting ===== */
+function addToInventory(genIt){ const inv=loadInv(); const rec={v:2,type:genIt.type,station:genIt.station,rarity:genIt.rarity,tag:genIt.tag,meta:genIt.meta,createdAt:Date.now()}; inv.push(rec); saveInv(inv); renderInventory(); renderMiniInventory(); }
 const invEl=document.getElementById('inventory'); const invGrid=document.getElementById('invGrid');
-let sortMode = sessionStorage.getItem('utl_inv_sort_mode') || 'new';
-function buildInvItemsList(){ return getInvSortedRecords().map(rec=>({ type:rec.type, station:rec.station, rarity:rec.rarity, stripe:stripe(rec.rarity), tag:rec.tag, meta:rec.meta })); }
-
+let sortMode=sessionStorage.getItem('utl_inv_sort_mode')||'new';
+function buildInvItemsList(){ return getInvSortedRecords().map(r=>({type:r.type,station:r.station,rarity:r.rarity,stripe:stripe(r.rarity),tag:r.tag,meta:r.meta})); }
 function getInvSortedRecords(){
   const arr=loadInv().map(r=>{ if(!r.meta){ r.meta=genMetaFor({type:r.type,station:r.station,rarity:r.rarity,tag:r.tag}); r.v=2; } return r; });
-  const cmpAZ = (a,b)=> displayKeyEN(a).localeCompare(displayKeyEN(b),'en',{sensitivity:'base'});
-  const cmpZA = (a,b)=> -cmpAZ(a,b);
-  const cmpRUp = (a,b)=> rarityIdx(a.rarity)-rarityIdx(b.rarity) || cmpAZ(a,b);
-  const cmpRDown = (a,b)=> -cmpRUp(a,b);
-  const cmpWUp = (a,b)=> (a.meta.wearF32-b.meta.wearF32)||cmpAZ(a,b);
-  const cmpWDown = (a,b)=> -cmpWUp(a,b);
-  let out=arr.slice();
-  if(sortMode==='new'){ out.sort((a,b)=> (b.createdAt||0)-(a.createdAt||0)); }
-  else if(sortMode==='old'){ out.sort((a,b)=> (a.createdAt||0)-(b.createdAt||0)); }
-  else if(sortMode==='az'){ out.sort(cmpAZ); }
-  else if(sortMode==='za'){ out.sort(cmpZA); }
-  else if(sortMode==='rUp'){ out.sort(cmpRUp); }
-  else if(sortMode==='rDown'){ out.sort(cmpRDown); }
-  else if(sortMode==='wUp'){ out.sort(cmpWUp); }
-  else if(sortMode==='wDown'){ out.sort(cmpWDown); }
-  return out;
+  arr.forEach(r=>{ if(!r.meta.lineKey){ r.meta.lineKey=deriveLineKey(r,r.meta); } r.meta.trainType=`${LINES[LANG][r.meta.lineKey]} ${r.meta.series}`; });
+  const cmpAZ=(a,b)=>displayKeyEN(a).localeCompare(displayKeyEN(b),'en',{sensitivity:'base'}); const cmpZA=(a,b)=>-cmpAZ(a,b);
+  const cmpRUp=(a,b)=>rarityIdx(a.rarity)-rarityIdx(b.rarity)||cmpAZ(a,b); const cmpRDown=(a,b)=>-cmpRUp(a,b);
+  const cmpWUp=(a,b)=> (a.meta.wearF32-b.meta.wearF32)||cmpAZ(a,b); const cmpWDown=(a,b)=> -cmpWUp(a,b);
+  let out=arr.slice(); if(sortMode==='new')out.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  else if(sortMode==='old')out.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+  else if(sortMode==='az')out.sort(cmpAZ); else if(sortMode==='za')out.sort(cmpZA);
+  else if(sortMode==='rUp')out.sort(cmpRUp); else if(sortMode==='rDown')out.sort(cmpRDown);
+  else if(sortMode==='wUp')out.sort(cmpWUp); else if(sortMode==='wDown')out.sort(cmpWDown); return out;
 }
-
 function renderInventory(){
-  invGrid.innerHTML='';
-  const inv=getInvSortedRecords();
-  const showWearLine=(sortMode==='wUp'||sortMode==='wDown');
-  inv.forEach((d, idx)=>{
-    const wrap=document.createElement('div'); wrap.className='cardWrap';
+  invGrid.innerHTML=''; const inv=getInvSortedRecords(); const showWear=(sortMode==='wUp'||sortMode==='wDown');
+  inv.forEach((d,idx)=>{ const wrap=document.createElement('div'); wrap.className='cardWrap';
     const box=document.createElement('div'); box.className='cardBox'; box.innerHTML=`<div class="stripe ${stripe(d.rarity)}"></div>`;
-    const lines=document.createElement('div'); lines.className='labelLines';
-    lines.innerHTML=`<div class="labelTrain">${tType(d.type)}</div><div class="labelStation">${stationName(d.station)}</div>`;
-    wrap.append(box,lines);
-    if(showWearLine){
-      const wear=document.createElement('div'); wear.className='wearLine'; wear.textContent=d.meta.wearF32.toFixed(9);
-      wrap.appendChild(wear);
-    }
-    wrap.onclick=()=>openInspectInventoryPath(idx);
-    invGrid.appendChild(wrap);
+    const lines=document.createElement('div'); lines.className='labelLines'; lines.innerHTML=`<div class="labelTrain">${tType(d.type)}</div><div class="labelStation">${stationName(d.station)}</div>`;
+    wrap.append(box,lines); if(showWear){ const wear=document.createElement('div'); wear.className='wearLine'; wear.textContent=d.meta.wearF32.toFixed(9); wrap.appendChild(wear); }
+    wrap.onclick=()=>openInspectInventoryPath(idx); invGrid.appendChild(wrap);
   });
+  buildInvCasePanel();
 }
-
-/* mini stats */
 function rarityOrder(){ return ['Mil-Spec','Restricted','Classified','Covert','Exceedingly Rare']; }
-function rarityColor(r){ return r==='Mil-Spec'?'var(--blue)':r==='Restricted'?'var(--purple)':r==='Classified'?'var(--pink)':r==='Covert'?'var(--red)':'var(--gold)'; }
+function rarityColor(r){ return r==='Mil-Spec'?'#4b69ff':r==='Restricted'?'#8847ff':r==='Classified'?'#d32ce6':r==='Covert'?'#eb4b4b':'#f7d674'; }
 function computeInvStats(){ const inv=loadInv(); const total=inv.length||1; const counts={}; rarityOrder().forEach(r=>counts[r]=0); inv.forEach(x=>counts[x.rarity]=(counts[x.rarity]||0)+1); const perc={}; rarityOrder().forEach(r=>perc[r]=Math.round((counts[r]/total)*1000)/10); return {counts,perc,total:inv.length}; }
-function renderMini(targetBarId,targetStatsId){ const {counts,perc,total}=computeInvStats(); const bar=document.getElementById(targetBarId), stats=document.getElementById(targetStatsId); if(!bar||!stats)return; bar.innerHTML=''; stats.innerHTML=''; const tot=Math.max(1,total); rarityOrder().forEach(r=>{const w=Math.max(0,Math.round((counts[r]/tot)*100)); if(w>0){const seg=document.createElement('div'); seg.className='invSeg'; seg.style.width=w+'%'; seg.style.background=rarityColor(r); bar.appendChild(seg);}}); if(total===0){const seg=document.createElement('div'); seg.className='invSeg'; seg.style.width='100%'; seg.style.background='rgba(255,255,255,.08)'; bar.appendChild(seg);} rarityOrder().forEach(r=>{if(counts[r]>0){const chip=document.createElement('div'); chip.innerHTML=`<span class="dot" style="background:${rarityColor(r)}"></span>${counts[r]} • ${perc[r]}%`; stats.appendChild(chip);}});}
+function renderMini(targetBarId,targetStatsId){ const {counts,perc,total}=computeInvStats(); const bar=document.getElementById(targetBarId), stats=document.getElementById(targetStatsId); if(!bar||!stats)return;
+  bar.innerHTML=''; stats.innerHTML=''; const tot=Math.max(1,total);
+  rarityOrder().forEach(r=>{const w=Math.max(0,Math.round((counts[r]/tot)*100)); if(w>0){const seg=document.createElement('div'); seg.className='invSeg'; seg.style.width=w+'%'; seg.style.background=rarityColor(r); bar.appendChild(seg);}});
+  if(total===0){const seg=document.createElement('div'); seg.className='invSeg'; seg.style.width='100%'; seg.style.background='rgba(255,255,255,.08)'; bar.appendChild(seg);}
+  rarityOrder().forEach(r=>{if(counts[r]>0){const chip=document.createElement('div'); chip.innerHTML=`<span class="dot" style="background:${rarityColor(r)}"></span>${counts[r]} • ${perc[r]}%`; stats.appendChild(chip);}});
+}
 function renderMiniInventory(){ renderMini('invBar1','invMiniStats1'); renderMini('invBar2','invMiniStats2'); renderMini('invBar3','invMiniStats3'); }
 
-/* inventory open/close */
+/* inv open/close */
 function openInventory(){ renderInventory(); renderMiniInventory(); invEl.classList.remove('closing'); invEl.classList.add('show'); invEl.setAttribute('aria-hidden','false'); invEl.style.transform='translateX(0)';}
-function closeInventory(force=false){
-  if(force){ invEl.classList.remove('show','closing','behind'); invEl.setAttribute('aria-hidden','true'); invEl.style.transform='translateX(-100%)'; return; }
+function closeInventory(force=false){ if(force){ invEl.classList.remove('show','closing','behind'); invEl.setAttribute('aria-hidden','true'); invEl.style.transform='translateX(-100%)'; hideCasePanel(true); return; }
   invEl.style.transform='translateX(0)'; void invEl.offsetWidth; invEl.classList.add('closing');
-  invEl.addEventListener('animationend', function onEnd(){ invEl.removeEventListener('animationend', onEnd); invEl.classList.remove('show','closing','behind'); invEl.setAttribute('aria-hidden','true'); invEl.style.transform='translateX(-100%)';});
+  invEl.addEventListener('animationend', function onEnd(){ invEl.removeEventListener('animationend', onEnd); invEl.classList.remove('show','closing','behind'); invEl.setAttribute('aria-hidden','true'); invEl.style.transform='translateX(-100%)'; hideCasePanel(true);});
 }
 ['invOpenBtn_ov','invOpenBtn_in'].forEach(id=>document.getElementById(id).onclick=openInventory);
 document.getElementById('invClose').onclick=closeInventory;
 /* clear inv confirm */
-const invConfirm=document.getElementById('invConfirm');
-document.getElementById('invClear').onclick=()=>invConfirm.classList.add('show');
+const invConfirm=document.getElementById('invConfirm'); document.getElementById('invClear').onclick=()=>invConfirm.classList.add('show');
 document.getElementById('confirmNo').onclick=()=>invConfirm.classList.remove('show');
 document.getElementById('confirmYes').onclick=()=>{ sessionStorage.setItem(INV_KEY,'[]'); renderInventory(); renderMiniInventory(); invConfirm.classList.remove('show'); };
 
@@ -871,16 +849,17 @@ function buildInvSortOptions(){
   sel.value = sortMode;
 }
 document.getElementById('invSort').addEventListener('change', e=>{
-  sortMode = e.target.value;
-  sessionStorage.setItem('utl_inv_sort_mode', sortMode);
-  renderInventory();
+  sortMode = e.target.value; sessionStorage.setItem('utl_inv_sort_mode', sortMode); renderInventory();
 });
 
 /* ===== Language selects ===== */
 function syncLangSelectors(){ ['langSel','langSel2','langSel3'].forEach(id=>{const s=document.getElementById(id); if(s) s.value=LANG;}); }
-['langSel','langSel2','langSel3'].forEach(id=>document.getElementById(id).addEventListener('change',e=>{LANG=e.target.value; syncLangSelectors(); refreshTexts(); buildGrid(); renderInventory(); renderMiniInventory(); if(pages.ins.classList.contains('show')&&currentItem) setHeader(currentItem); updateTitlesLayout();}));
+['langSel','langSel2','langSel3'].forEach(id=>document.getElementById(id).addEventListener('change',e=>{
+  LANG=e.target.value; syncLangSelectors(); refreshTexts(); buildGrid(); renderInventory(); renderMiniInventory();
+  if(pages.ins.classList.contains('show')&&currentItem) setHeader(currentItem); updateTitlesLayout();
+}));
 
-/* ===== Mobile title shift ===== */
+/* ===== Mobile title fit + lens sizing ===== */
 function overlaps(r1,r2){return !(r2.left>r1.right||r2.right<r1.left||r2.top>r1.bottom||r2.bottom<r1.top);}
 function adjustTitleForPage(pageEl,titleEl){
   if(!pageEl||!titleEl) return; const left=pageEl.querySelector('.topLeft'); const right=pageEl.querySelector('.topCtrls'); if(!left||!right){titleEl.classList.remove('shiftDown');return;}
@@ -889,60 +868,126 @@ function adjustTitleForPage(pageEl,titleEl){
   const totalApprox=rectLeft.width+rectTitle.width+rectRight.width+32; const needShift=(totalApprox>window.innerWidth)||overlaps(rectTitle,rectLeft)||overlaps(rectTitle,rectRight);
   titleEl.classList.toggle('shiftDown',needShift);
 }
-function updateTitlesLayout(){ adjustTitleForPage(pages.ov,document.getElementById('hudOv')); adjustTitleForPage(pages.op,document.getElementById('hudOp')); adjustTitleForPage(pages.ins,document.getElementById('insHeadTop')); }
-window.addEventListener('resize',()=>{updateTitlesLayout(); updateLensSizing(); if(infoPanelEl.classList.contains('show')) positionInfoPanel();});
-
-/* ===== Lens sizing (mobile card fits) ===== */
+function updateTitlesLayout(){ adjustTitleForPage(pages.ov,document.getElementById('hudOv')); adjustTitleForPage(pages.op,document.getElementById('hudOp')); adjustTitleForPage(pages.ins,document.getElementById('insHeadTop')); fitBigText(); }
+window.addEventListener('resize',()=>{updateTitlesLayout(); updateLensSizing(); if(document.getElementById('infoPanel').classList.contains('show')) positionInfoPanel(); if(invCasePanel.classList.contains('show')) positionCasePanel();});
 function updateLensSizing(){
   const lens=document.getElementById('lens'); if(!lens) return;
-  const w=lens.getBoundingClientRect().width; const maxScaleForWidth=(w-16)/279; const s=Math.min(1.18, Math.max(1.02, maxScaleForWidth));
+  const mobile=window.innerWidth<=480;
+  if(!mobile){ document.documentElement.style.setProperty('--lensScale','1.22'); return; }
+  const lensW=lens.getBoundingClientRect().width;
+  const vpW=document.querySelector('.cloneViewport').getBoundingClientRect().width;
+  const s=clamp((lensW-16)/vpW, 1.06, 1.16);
   document.documentElement.style.setProperty('--lensScale', String(s));
 }
 
-/* ===== Migration (old -> new) ===== */
-function migrateInventoryIfNeeded(){
-  const hasV2 = sessionStorage.getItem(INV_KEY);
-  if(!hasV2){
-    const oldRaw = sessionStorage.getItem('utl_inventory_v1');
-    if(oldRaw){
-      let arr=[]; try{arr=JSON.parse(oldRaw)||[]}catch{arr=[]}
-      const converted = arr.map(o=>convertOldItem(o)).filter(Boolean);
-      saveInv(converted);
-    }else{
-      saveInv([]);
-    }
-  }else{
-    const arr=loadInv(); let changed=false;
-    for(const r of arr){ if(!r.v){ r.v=2; changed=true; } if(!r.meta){ const base={type:r.type,station:r.station,rarity:r.rarity,tag:r.tag}; r.meta=genMetaFor(base); changed=true; } }
-    if(changed) saveInv(arr);
-  }
+/* ===== Quick-open controls ===== */
+const qNum=document.getElementById('qNum'); document.getElementById('qPlus').onclick=()=>{ qNum.value=String(clamp((parseInt(qNum.value||'1',10)||1)+1,1,500)); };
+document.getElementById('qMinus').onclick=()=>{ qNum.value=String(clamp((parseInt(qNum.value||'1',10)||1)-1,1,500)); };
+qNum.addEventListener('input',()=>{ qNum.value=qNum.value.replace(/[^\d]/g,'').slice(0,4); });
+qNum.addEventListener('blur',()=>{ qNum.value=String(clamp(parseInt(qNum.value||'1',10)||1,1,500)); });
+
+/* ===== Quick-open modal ===== */
+const quickModal=document.getElementById('quickModal');
+const qBox=document.getElementById('qBox');
+const qItemName=document.getElementById('qItemName');
+const qCollName=document.getElementById('qCollName');
+const qLogoSmall=document.getElementById('qLogoSmall');
+const qCountFloat=document.getElementById('qCountFloat');
+const qPrev=document.getElementById('qPrev');
+const qNext=document.getElementById('qNext');
+const qClose=document.getElementById('qClose');
+const qNew=document.getElementById('qNew');
+const qBig=document.getElementById('qBig');
+
+let quickResults=[], quickIndex=0;
+function showQuickModal(list,idx){
+  quickResults=list.slice(); quickIndex=clamp(idx,0,quickResults.length-1);
+  qLogoSmall.src=document.getElementById('logoImg').src||''; document.getElementById('invCaseLogo').src=document.getElementById('logoImg').src||'';
+  updateQuickModal();
+  quickModal.classList.remove('hiding'); quickModal.classList.add('show'); quickModal.setAttribute('aria-hidden','false');
+  quickModal.addEventListener('click', onOverlayClick);
 }
-function convertOldItem(o){
-  if(!o) return null;
-  let type, station=o.station, rarity=o.rarity;
-  const tr=o.train;
-  if(tr==='E657'){ if(['Sendai','Haranomachi','Katsuta','Iwaki'].includes(station)){ type=(station==='Katsuta'||station==='Takhagi'||station==='Tsuchiura'||station==='Iwaki')?'Tokiwa':'Hitachi'; } else type='Tokiwa'; }
-  else if(tr==='Hitachi'||tr==='Tokiwa'){ type=tr; }
-  else if(tr==='E531'){ if(station==='Toride') type='Rapid'; else type='Local'; }
-  else if(tr==='E259'){ type='Rapid'; station='Narita'; }
-  else { type='Local'; }
-  const newDef = ITEMS.find(x=>x.type===type && x.station===station);
-  if(newDef) rarity=newDef.rarity;
-  const tag = newDef?newDef.tag:TAG("","","");
-  return {v:2,type,station,rarity,tag,meta:genMetaFor({type,station,rarity,tag}),createdAt:Date.now()};
+function onOverlayClick(e){ if(e.target===quickModal){ closeQuickModal(); } }
+function updateQuickModal(){
+  const it=quickResults[quickIndex];
+  const title=displayKey(it);
+  qItemName.textContent=title; qBig.textContent=title;
+  qCollName.textContent=UI[LANG].coll; qNew.textContent=UI[LANG].newItem; qClose.textContent=UI[LANG].cont;
+  qCountFloat.textContent=`${quickResults.length>1?(quickIndex+1)+' / '+quickResults.length:''}`;
+  qBox.style.setProperty('--qClr', colorFor(it.rarity));
+  qPrev.style.display=quickResults.length>1?'grid':'none'; qNext.style.display=quickResults.length>1?'grid':'none';
 }
-window.dev_convertOldInventory = migrateInventoryIfNeeded;
-window.dev_backfillMeta = function(){ const arr=loadInv(); arr.forEach(r=>{ if(!r.meta) r.meta=genMetaFor({type:r.type,station:r.station,rarity:r.rarity,tag:r.tag}); r.v=2; }); saveInv(arr); };
+function closeQuickModal(){
+  quickModal.classList.add('hiding');
+  quickModal.removeEventListener('click', onOverlayClick);
+  quickModal.addEventListener('animationend', function end(){ quickModal.removeEventListener('animationend', end); quickModal.classList.remove('show','hiding'); quickModal.setAttribute('aria-hidden','true'); });
+}
+qPrev.onclick=()=>{ quickIndex=(quickIndex-1+quickResults.length)%quickResults.length; updateQuickModal(); };
+qNext.onclick=()=>{ quickIndex=(quickIndex+1)%quickResults.length; updateQuickModal(); };
+qClose.addEventListener('click', (e)=>{ e.stopPropagation(); closeQuickModal(); });
+
+/* ===== Inventory Case Panel (hover/click on “Inventory” when drawer is open) ===== */
+const invTitleEl=document.getElementById('invTitle');
+const invCasePanel=document.getElementById('invCasePanel');
+function buildInvCasePanel(){
+  invTitleEl.classList.add('hint');
+  const haveList=loadInv();
+  const haveSet=new Set(haveList.map(r=>`${r.type}|${r.station}`));
+  const counts={};
+  haveList.forEach(r=>{ const k=`${r.type}|${r.station}`; counts[k]=(counts[k]||0)+1; });
+
+  const sorted=ITEMS.slice().sort((a,b)=>{
+    const r = rarityIdx(a.rarity)-rarityIdx(b.rarity); if(r!==0) return r;
+    const t = tTypeEn(a.type).localeCompare(tTypeEn(b.type),'en',{sensitivity:'base'}); if(t!==0) return t;
+    return a.station.localeCompare(b.station,'en',{sensitivity:'base'});
+  });
+
+  const list=document.getElementById('invCaseList'); list.innerHTML='';
+  sorted.forEach(it=>{
+    const k=`${it.type}|${it.station}`;
+    const li=document.createElement('div'); li.className='li';
+    const left=document.createElement('div'); left.className='liL';
+    const tick=document.createElement('span'); tick.className='tick'; tick.textContent=haveSet.has(k)?'✓':'';
+    const name=document.createElement('span'); name.className='name'; name.style.color=colorFor(it.rarity);
+    name.textContent=`${tType(it.type)} | ${stationName(it.station)}`;
+    left.appendChild(tick); left.appendChild(name);
+    const cnt=document.createElement('div'); cnt.className='cnt'; cnt.textContent=counts[k]?String(counts[k]):'';
+    li.appendChild(left); li.appendChild(cnt);
+    list.appendChild(li);
+  });
+}
+function positionCasePanel(){
+  const inv = document.getElementById('inventory');
+  if(inv.getAttribute('aria-hidden')==='true') return;
+  const invRect = inv.getBoundingClientRect();
+  const headRect = inv.querySelector('.invHead').getBoundingClientRect();
+  let width = Math.round(invRect.width * 0.5); /* keep half width per spec */
+  width = clamp(width, 260, invRect.width - 24);
+  invCasePanel.style.width = width + 'px';
+  invCasePanel.style.left  = (invRect.left + 16) + 'px';
+  invCasePanel.style.top   = (headRect.bottom + 8) + 'px';
+}
+/* show/hide with hover + sticky click */
+let caseSticky=false, overTitle=false, overPanel=false, hideCaseTimer=null;
+function showCasePanel(){ buildInvCasePanel(); positionCasePanel(); invCasePanel.classList.add('show'); invCasePanel.setAttribute('aria-hidden','false'); }
+function hideCasePanel(immediate=false){ if(immediate){invCasePanel.classList.remove('show'); invCasePanel.setAttribute('aria-hidden','true'); return;} invCasePanel.classList.remove('show'); invCasePanel.setAttribute('aria-hidden','true'); }
+function scheduleHideCase(){ if(caseSticky)return; clearTimeout(hideCaseTimer); hideCaseTimer=setTimeout(()=>{ if(!overTitle && !overPanel) hideCasePanel(); },130); }
+invTitleEl.addEventListener('mouseenter',()=>{ if(invEl.classList.contains('show')){ overTitle=true; showCasePanel(); } });
+invTitleEl.addEventListener('mouseleave',()=>{ overTitle=false; scheduleHideCase(); });
+invCasePanel.addEventListener('mouseenter',()=>{ overPanel=true; showCasePanel(); });
+invCasePanel.addEventListener('mouseleave',()=>{ overPanel=false; scheduleHideCase(); });
+invTitleEl.addEventListener('click',()=>{ if(!invEl.classList.contains('show')) return; caseSticky=!caseSticky; if(caseSticky) showCasePanel(); else hideCasePanel(); });
+
+/* ===== Migration (init v2 store) ===== */
+function migrateInventoryIfNeeded(){ if(!sessionStorage.getItem('utl_inventory_v2')) sessionStorage.setItem('utl_inventory_v2','[]'); }
 
 /* ===== Init ===== */
 detectInitialLang();
 (function init(){
   ['langSel','langSel2','langSel3'].forEach(id=>{const s=document.getElementById(id); if(s) s.value=LANG;});
-  refreshTexts(); buildInvSortOptions();
-  buildGrid();
-  migrateInventoryIfNeeded();
-  renderInventory(); renderMiniInventory();
-  updateTitlesLayout(); updateLensSizing();
+  refreshTexts(); buildInvSortOptions(); buildGrid(); migrateInventoryIfNeeded();
+  renderInventory(); renderMiniInventory(); updateTitlesLayout(); updateLensSizing();
+  document.getElementById('inspectBtn').addEventListener('click', ()=>{ if(!ITEMS_SORTED.length) buildGrid(); const first=ITEMS_SORTED[0]; if(first){ openInspectItemsPath(first,0); } });
 })();
 </script>
 </body>
