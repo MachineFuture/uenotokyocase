@@ -128,8 +128,7 @@ select{appearance:none;background:#fff;border:none;color:#000;font-weight:800;cu
 .tile{flex:0 0 var(--tileW);height:var(--tileH);border-radius:0;border:1px solid rgba(255,255,255,.18);background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.03));display:flex;align-items:flex-end;justify-content:flex-start;position:relative;padding:12px 12px 16px;font-weight:900}
 .tile .stripe{left:0;right:0;height:6px;background:var(--clr)}
 
-/* lens (desktop preserved; mobile rules below)
-   Desktop lens size (unchanged): width/height: min(60vmin, 560px) */
+/* lens (desktop preserved) */
 .lens{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(60vmin,560px);height:min(60vmin,560px);border-radius:50%;overflow:hidden;pointer-events:none;z-index:10;opacity:0}
 .lens.show{opacity:1;transition:opacity .12s ease}
 .lens .layer{position:absolute;inset:0}
@@ -158,11 +157,11 @@ select{appearance:none;background:#fff;border:none;color:#000;font-weight:800;cu
 @keyframes curtainIn{from{opacity:0}to{opacity:1}}
 @keyframes curtainHold{0%{opacity:1}90%{opacity:1}100%{opacity:0}}
 
-/* narrow mobile: smaller tiles + lens capped to 90% of screen */
+/* narrow mobile: smaller tiles + 90vw lens */
 @media (max-width:480px){
   :root{ --tileW:220px; --tileH:146px; --gap:8px; --vpH:calc(var(--tileH) + 20px); }
   .viewport{width:86vw}
-  .lens{width:90vw;height:90vw} /* max 90% of mobile screen */
+  .lens{width:90vw;height:90vw;max-width:90vw;max-height:90vw}
 }
 
 /* inspect */
@@ -233,16 +232,17 @@ select{appearance:none;background:#fff;border:none;color:#000;font-weight:800;cu
 .invCasePanel.show{display:block}
 .invCasePanel .hdr{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .invCasePanel .hdr .lg{width:44px;height:44px;border:1px solid rgba(255,255,255,.18);display:grid;place-items:center;background:rgba(255,255,255,.04);overflow:hidden}
-.invCasePanel .hdr .lg img{max-width:100%;max-height:100%}
+.invCasePanel .hdr .lg img{max-width:100%;max-height:100%;object-fit:contain}
 .invCasePanel .hdr .nm{font-size:18px;font-weight:900}
-/* Ensure list text never sits under the scrollbar */
-.invCasePanel .list{font-size:13.5px;line-height:1.25;margin-top:2px;padding-right:16px}
+/* REVERTED item list wrapping; just a small base right padding */
+.invCasePanel .list{font-size:13.5px;line-height:1.25;margin-top:2px;padding-right:10px}
 .invCasePanel .li{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:4px 2px}
-.invCasePanel .liL{display:flex;gap:6px;min-width:0;flex:1;padding-right:16px}
+.invCasePanel .liL{display:flex;gap:6px;min-width:0;flex:1}
 .invCasePanel .tick{display:inline-block;width:14px;text-align:center;color:#fff;flex:0 0 14px}
-.invCasePanel .name{white-space:normal;word-break:break-word;overflow-wrap:anywhere;flex:1}
+.invCasePanel .name{white-space:normal;word-break:normal;overflow-wrap:break-word;flex:1}
 .invCasePanel .cnt{color:#cfd6e6;opacity:.9;font-size:12px;min-width:36px;text-align:right;margin-left:12px;flex:0 0 auto}
-.invCasePanel .desc{margin-top:8px;color:#cfd6e6}
+/* Only the BOTTOM DESCRIPTION gets protection against overflow/clipping */
+.invCasePanel .desc{margin-top:8px;color:#cfd6e6;padding-right:max(16px,4vw);white-space:normal;word-break:normal;overflow-wrap:break-word}
 
 /* body */
 .invBody{display:flex;flex-direction:column;flex:1;min-height:0}
@@ -300,8 +300,9 @@ select{appearance:none;background:#fff;border:none;color:#000;font-weight:800;cu
   border-top:1px solid rgba(255,255,255,.12);
   padding:10px 18px 12px 18px;display:flex;align-items:center;justify-content:flex-end;
   background:linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.22));
+  z-index:2; /* above arrows so CONTINUE always wins taps */
 }
-.qArrow{position:absolute;top:0;bottom:0;width:48px;display:grid;place-items:center;font-size:32px;font-weight:900;color:#ffffffaa;cursor:pointer;user-select:none}
+.qArrow{position:absolute;top:8px;bottom:calc(var(--qBarH) + 8px);width:48px;display:grid;place-items:center;font-size:32px;font-weight:900;color:#ffffffaa;cursor:pointer;user-select:none;z-index:1}
 .qArrow:hover{color:#fff}
 .qPrev{left:8px}.qNext{right:8px}
 
@@ -312,6 +313,20 @@ select{appearance:none;background:#fff;border:none;color:#000;font-weight:800;cu
   .qMeta{left:18px;bottom:calc(var(--qBarH) + 16px)}
   .qCountFloat{right:18px;bottom:calc(var(--qBarH) + 14px)}
   .qBig{font-size:40px;left:24px;right:24px}
+}
+
+/* MOBILE layout for overview action bar:
+   prompt on its own row, QUICK and OPEN aligned right, QUICK sits left of OPEN */
+@media (max-width:600px){
+  .actionBar70{
+    grid-template-columns:1fr auto;
+    grid-template-areas:
+      "prompt prompt"
+      "quick  open";
+  }
+  .prompt{grid-area:prompt;justify-self:start}
+  .quickSlot{grid-area:quick;justify-self:end}
+  .openSlot{grid-area:open;justify-self:end}
 }
 </style>
 </head>
@@ -855,7 +870,7 @@ document.getElementById('invSort').addEventListener('change', e=>{
 /* ===== Language selects ===== */
 function syncLangSelectors(){ ['langSel','langSel2','langSel3'].forEach(id=>{const s=document.getElementById(id); if(s) s.value=LANG;}); }
 ['langSel','langSel2','langSel3'].forEach(id=>document.getElementById(id).addEventListener('change',e=>{
-  LANG=e.target.value; syncLangSelectors(); refreshTexts(); buildGrid(); renderInventory(); renderMiniInventory();
+  LANG=e.target.value; syncLangSelectors(); refreshTexts(); buildInvSortOptions(); buildGrid(); renderInventory(); renderMiniInventory();
   if(pages.ins.classList.contains('show')&&currentItem) setHeader(currentItem); updateTitlesLayout();
 }));
 
@@ -876,7 +891,7 @@ function updateLensSizing(){
   if(!mobile){ document.documentElement.style.setProperty('--lensScale','1.22'); return; }
   const lensW=lens.getBoundingClientRect().width;
   const vpW=document.querySelector('.cloneViewport').getBoundingClientRect().width;
-  const s=clamp((lensW-16)/vpW, 1.06, 1.16);
+  const s=clamp((lensW-24)/vpW, 1.05, 1.14);
   document.documentElement.style.setProperty('--lensScale', String(s));
 }
 
@@ -924,7 +939,11 @@ function closeQuickModal(){
 }
 qPrev.onclick=()=>{ quickIndex=(quickIndex-1+quickResults.length)%quickResults.length; updateQuickModal(); };
 qNext.onclick=()=>{ quickIndex=(quickIndex+1)%quickResults.length; updateQuickModal(); };
-qClose.addEventListener('click', (e)=>{ e.stopPropagation(); closeQuickModal(); });
+qClose.addEventListener('click', (e)=>{
+  e.stopPropagation();
+  quickResults=[]; quickIndex=0;
+  closeQuickModal();
+});
 
 /* ===== Inventory Case Panel (hover/click on “Inventory” when drawer is open) ===== */
 const invTitleEl=document.getElementById('invTitle');
@@ -961,7 +980,7 @@ function positionCasePanel(){
   if(inv.getAttribute('aria-hidden')==='true') return;
   const invRect = inv.getBoundingClientRect();
   const headRect = inv.querySelector('.invHead').getBoundingClientRect();
-  let width = Math.round(invRect.width * 0.5); /* keep half width per spec */
+  let width = Math.round(invRect.width * 0.5);
   width = clamp(width, 260, invRect.width - 24);
   invCasePanel.style.width = width + 'px';
   invCasePanel.style.left  = (invRect.left + 16) + 'px';
@@ -977,6 +996,13 @@ invTitleEl.addEventListener('mouseleave',()=>{ overTitle=false; scheduleHideCase
 invCasePanel.addEventListener('mouseenter',()=>{ overPanel=true; showCasePanel(); });
 invCasePanel.addEventListener('mouseleave',()=>{ overPanel=false; scheduleHideCase(); });
 invTitleEl.addEventListener('click',()=>{ if(!invEl.classList.contains('show')) return; caseSticky=!caseSticky; if(caseSticky) showCasePanel(); else hideCasePanel(); });
+
+/* ===== Outside-click closes INVENTORY with animation ===== */
+window.addEventListener('pointerdown', (e)=>{
+  if (invEl.getAttribute('aria-hidden')==='false' && !invEl.classList.contains('closing') && !invEl.classList.contains('behind')) {
+    if (!invEl.contains(e.target)) closeInventory();
+  }
+}, true);
 
 /* ===== Migration (init v2 store) ===== */
 function migrateInventoryIfNeeded(){ if(!sessionStorage.getItem('utl_inventory_v2')) sessionStorage.setItem('utl_inventory_v2','[]'); }
